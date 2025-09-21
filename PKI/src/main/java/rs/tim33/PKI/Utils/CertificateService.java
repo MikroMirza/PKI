@@ -1,17 +1,12 @@
 package rs.tim33.PKI.Utils;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.sql.Date;
@@ -19,20 +14,16 @@ import java.sql.Date;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import rs.tim33.PKI.Models.CertificateModel;
-import rs.tim33.PKI.Models.KeystoreModel;
 import rs.tim33.PKI.Models.UserModel;
 import rs.tim33.PKI.Repositories.CertificateRepository;
-import rs.tim33.PKI.Repositories.KeystoreRepository;
 import rs.tim33.PKI.Repositories.UserRepository;
 import rs.tim33.PKI.Services.KeystoreService;
 
@@ -53,32 +44,25 @@ public class CertificateService {
 
 	@Autowired
 	private CertificateRepository certRepo;
-	@Autowired
-	private KeystoreService keystoreService;
-	@Autowired
-	private KeystoreRepository keystoreRepo;
 	@Autowired 
 	private UserRepository userRepo;
 	
-	public PrivateKey getPrivateKeyOfCert(Long certificateId) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException {
+	@Autowired
+	private KeystoreService keystoreService;
+	
+	@Autowired
+	private KeyHelper keyHelper;
+	
+	
+	public PrivateKey getPrivateKeyOfCert(Long certificateId) throws Exception {
 		CertificateModel cert = certRepo.findById(certificateId).orElse(null);
-
-		KeyStore ks;
-		try {
-			ks = keystoreService.getKeystoreFromId(cert.getKeystore().getId());
-			Key key = ks.getKey(cert.getAlias(), "TODO PASSWORD".toCharArray());
-			if (key instanceof PrivateKey) {
-			    return (PrivateKey) key;
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
-		return null;
+		byte[] keystoreKey = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(cert.getAlias())).getEncoded();
+		PrivateKey privateKey = keyHelper.decryptPrivateKey(cert.getEncryptedPrivateKey(), keystoreKey);
+		return privateKey;
 	}
 	
-	public KeyPairAndCert createSelfSigned(String dn, int daysValid) throws CertificateException, CertIOException, OperatorCreationException, NoSuchAlgorithmException {
+	public KeyPairAndCert createSelfSigned(String dn, int daysValid) throws Exception {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(2048);
         KeyPair keyPair = keyGen.generateKeyPair();
@@ -99,11 +83,19 @@ public class CertificateService {
 
         ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
         X509Certificate cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
-
+        
+        //TODO ENCRYPT STUFF
+        CertificateModel certModel = new CertificateModel(cert, null, "Root");
+        byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias("Root")).getEncoded();
+        byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
+        certModel.setEncryptedPrivateKey(encryptedPrivateKey);
+        
+        certRepo.save(certModel);
+        
         return new KeyPairAndCert(keyPair, cert);
 	}
 	
-	public KeyPairAndCert createIntermediate(Long parentCertId, String orgUnit, int daysValid) throws Exception {
+	public KeyPairAndCert createIntermediate(Long parentCertId, String org, String orgUnit, int daysValid) throws Exception {
 		CertificateModel parentCert = certRepo.findById(parentCertId).orElse(null);
 		
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
@@ -114,7 +106,7 @@ public class CertificateService {
         Date startDate = new Date(now);
         Date endDate = new Date(now + daysValid * 24L * 60 * 60 * 1000);
         
-        X500Name subject = new X500Name("CN=Intermediate, O=" + orgUnit);
+        X500Name subject = new X500Name("CN=Intermediate, O=" + org + ", OU=" + orgUnit);
         X500Name issuer = new X500Name(parentCert.getSubjectDn());
         BigInteger serial = BigInteger.valueOf(now);
         
@@ -129,11 +121,12 @@ public class CertificateService {
         X509Certificate cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
         
         //Persist it in the database
-        CertificateModel newCert = new CertificateModel(cert, parentCert.getKeystore(), parentCert);
-        newCert = certRepo.save(newCert);
+        CertificateModel certModel = new CertificateModel(cert, parentCert, org);
+        byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(org)).getEncoded();
+        byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
+        certModel.setEncryptedPrivateKey(encryptedPrivateKey);
         
-        //Persist it in the keystore
-        keystoreService.addCertificate(newCert.getKeystore().getId(), newCert.getId(), keyPair.getPrivate());
+        certRepo.save(certModel);
         
 		return new KeyPairAndCert(keyPair, cert);
 	}
@@ -150,7 +143,7 @@ public class CertificateService {
         Date startDate = new Date(now);
         Date endDate = new Date(now + daysValid * 24L * 60 * 60 * 1000);
         
-        X500Name subject = new X500Name("CN="+user.getName() + certName + ", O="+user.getPrivateOrganisation());
+        X500Name subject = new X500Name("CN="+user.getName() + certName + ", O="+user.getOrganization());
         X500Name issuer = new X500Name(parentCert.getSubjectDn());
         BigInteger serial = BigInteger.valueOf(now);
         
@@ -165,11 +158,12 @@ public class CertificateService {
         X509Certificate cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
         
         //Persist it in the database
-        CertificateModel newCert = new CertificateModel(cert, parentCert.getKeystore(), parentCert);
-        newCert = certRepo.save(newCert);
+        CertificateModel certModel = new CertificateModel(cert, parentCert, user.getOrganization());
+        byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(user.getOrganization())).getEncoded();
+        byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
+        certModel.setEncryptedPrivateKey(encryptedPrivateKey);
         
-        //Persist it in the keystore
-        keystoreService.addCertificate(newCert.getKeystore().getId(), newCert.getId(), keyPair.getPrivate());
+        certRepo.save(certModel);
         
 		return new KeyPairAndCert(keyPair, cert);
 	}

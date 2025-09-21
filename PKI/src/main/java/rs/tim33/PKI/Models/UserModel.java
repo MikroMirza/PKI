@@ -37,7 +37,7 @@ public class UserModel {
     //Only for regular users
     @OneToMany(mappedBy = "ownerUser")
     private List<CertificateModel> certificates = new ArrayList<>();
-    private String privateOrganisation;
+    private String organization;
     @Lob
     private byte[] keystorePasswordEncrypted;
     private boolean isVerified=false;

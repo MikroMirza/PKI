@@ -17,15 +17,10 @@ public class CertificateController {
 	@Autowired
 	private CertificateService certService;
 	
-	@PostMapping("/self-signed")
-	public ResponseEntity<Void> createSelfSigned(){
-		return new ResponseEntity<Void>(HttpStatus.OK);
-	};
-	
 	@PostMapping("/intermediate")
 	public ResponseEntity<Void> createIntermediate(@RequestBody CreateIntermediateDTO data){
 		try {
-			certService.createIntermediate(data.issuerId, data.organizationUnit, data.daysValid);
+			certService.createIntermediate(data.issuerId, data.organization, data.organizationUnit, data.daysValid);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
