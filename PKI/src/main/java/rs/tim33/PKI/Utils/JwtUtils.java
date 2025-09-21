@@ -1,6 +1,7 @@
 package rs.tim33.PKI.Utils;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -15,6 +16,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import rs.tim33.PKI.Models.Role;
+import rs.tim33.PKI.Models.UserModel;
 
 @Component
 public class JwtUtils {
@@ -29,11 +32,12 @@ public class JwtUtils {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
     
-    public String generateToken(String username) {
+    public String generateToken(String email, Role role) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .claim("role", role.toString())
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

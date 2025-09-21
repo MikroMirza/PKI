@@ -1,6 +1,7 @@
 package rs.tim33.PKI.Controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import rs.tim33.PKI.DTO.Auth.LoginDTO;
+import rs.tim33.PKI.DTO.Auth.LoginResponse;
 import rs.tim33.PKI.DTO.Auth.RefreshRequest;
 import rs.tim33.PKI.DTO.Auth.RefreshResponse;
+import rs.tim33.PKI.Models.UserModel;
 import rs.tim33.PKI.Repositories.RefreshTokenRepository;
+import rs.tim33.PKI.Repositories.UserRepository;
 import rs.tim33.PKI.Services.RefreshTokenService;
 import rs.tim33.PKI.Utils.JwtUtils;
 
@@ -32,11 +36,25 @@ public class AuthController {
 	@Autowired
 	private JwtUtils jwtUtils;
 	
+	@Autowired
+	private UserRepository userRepo;
+	
 	@PostMapping("/login")
-	public String login(@RequestBody LoginDTO data){
+	public ResponseEntity<LoginResponse> login(@RequestBody LoginDTO data){
 		Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(data.email, data.password));
 		UserDetails user = (UserDetails)authentication.getPrincipal();
-		return jwtUtils.generateToken(user.getUsername());
+		
+		UserModel u = userRepo.findByEmail(data.email).orElse(null);
+		if(u == null)
+			return ResponseEntity.notFound().build();
+		
+		LoginResponse data2 = new LoginResponse();
+		data2.jwt = jwtUtils.generateToken(u.getEmail(), u.getRole());
+		data2.refresh = refreshService.createRefreshToken(user.getUsername()).getToken();
+		data2.role = u.getRole().toString();
+		System.out.println("ALOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO " + u.getRole().toString());
+		
+		return ResponseEntity.ok(data2);
 	}
 	
 	@PostMapping("/refresh")
@@ -47,7 +65,7 @@ public class AuthController {
                     refreshRepo.delete(token);
                     return ResponseEntity.badRequest().body("Refresh token expired. Please login again.");
                 }
-                String newJwt = jwtUtils.generateToken(token.getUser().getEmail());
+                String newJwt = jwtUtils.generateToken(token.getUser().getEmail(), token.getUser().getRole());
                 RefreshResponse resp = new RefreshResponse();
                 resp.jwt = newJwt;
                 return ResponseEntity.ok(resp);

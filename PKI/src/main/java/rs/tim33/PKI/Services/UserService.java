@@ -34,4 +34,19 @@ public class UserService {
 		
 		return userRepo.save(user);
 	}
+	
+	
+	//No email verification here :)
+	public UserModel registerCaUser(String email, String password, String name, String surname, String org) throws Exception {
+		UserModel user = new UserModel();
+		user.setEmail(email);
+		user.setPasswordHash(passEncoder.encode(password));
+		user.setName(name);
+		user.setSurname(surname);
+		user.setOrganization(org);
+		user.setRole(Role.CA);
+		user.setKeystorePasswordEncrypted(keyHelper.generateEncryptedKeystoreKey());
+		
+		return userRepo.save(user);
+	}
 }
