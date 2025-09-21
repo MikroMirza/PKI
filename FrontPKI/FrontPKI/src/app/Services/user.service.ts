@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import { environment } from "../env/environment";
 import { Observable } from "rxjs";
 import { VerificationResponse } from "../common/VerificationResponse";
+import { RegisterUserDTO } from "../DTO/User/RegisterUserDTO";
 
 
 
@@ -21,6 +22,10 @@ export class UserService {
       headers: this.headers,
       params: { token }
     });
+  }
+
+  createCaUser(data: RegisterUserDTO){
+    return this.http.post(`${environment.apiHost}/api/users/ca`, data)
   }
 
 }

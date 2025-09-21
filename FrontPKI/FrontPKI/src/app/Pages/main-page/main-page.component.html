@@ -1,0 +1,10 @@
+<h1 *ngIf="(role=='ADMIN')">Admin page</h1>
+<h1 *ngIf="(role=='CA')">CA page</h1>
+<h1 *ngIf="(role=='USER')">User page</h1>
+
+<button *ngIf="(role=='ADMIN')" [routerLink]="'/users/ca/new'">
+    Create CA user
+</button>
+<button *ngIf="(role=='ADMIN')" [routerLink]="'/certificate/ca/new'">
+    Create CA certificate
+</button>

@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastNotifyService } from '../../../common/ToastNotifyService';
 import { UserService } from '../../../Services/user.service';
+import { AuthService } from '../../auth.service';
 
 @Component({
   selector: 'app-verification',
@@ -12,7 +13,7 @@ import { UserService } from '../../../Services/user.service';
 export class Verification {
 
   constructor(private userService: UserService, private route: ActivatedRoute, 
-    private authService: AuthenticationService, private router: Router, 
+    private authService: AuthService, private router: Router, 
     private toastNotifyService: ToastNotifyService) {}
 
   onButtonClick(): void {
@@ -21,7 +22,7 @@ export class Verification {
       if (token) {
         this.userService.verifyUser(token).subscribe({
           next: (res) => {
-            this.authService.logOut();
+            this.authService.logout();
             this.toastNotifyService.showSuccessful('Successfully verified account.')
             this.router.navigate(['authentication/login']);
           },
