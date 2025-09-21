@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -28,13 +31,13 @@ public class CertificateModel {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-	//Private key keystore (if it exists)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "keystore_id")
-    private KeystoreModel keystore;
-
     private String alias;
+    private String serialNumber;
+    private LocalDateTime notBefore;
+    private LocalDateTime notAfter;
+    private String organization;
+    @Lob
+    private byte[] encryptedPrivateKey;
     
     //X500Name
     @Column(columnDefinition = "TEXT")
@@ -42,14 +45,6 @@ public class CertificateModel {
     @Column(columnDefinition = "TEXT")
     private String issuerDn;
     
-    private String serialNumber;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_certificate_id")
-    private CertificateModel parentCertificate;
-
-    private LocalDateTime notBefore;
-    private LocalDateTime notAfter;
 
     //X509Certificate serialized
     @Lob
@@ -60,9 +55,10 @@ public class CertificateModel {
     private String revocationReason;
     private LocalDateTime revokedAt;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_certificate_id")
+    private CertificateModel parentCertificate;
+    
     @OneToMany(mappedBy = "parentCertificate")
     private List<CertificateModel> childCertificates;
     
@@ -71,9 +67,8 @@ public class CertificateModel {
     
     public CertificateModel() {}
     
-    public CertificateModel(X509Certificate cert, KeystoreModel keystore, CertificateModel parent) {
-    	setKeystore(keystore);
-        setAlias(cert.getSubjectX500Principal().getName());
+    public CertificateModel(X509Certificate cert, CertificateModel parent, String keyAlias) {
+        setAlias(keyAlias);
         setSubjectDn(cert.getSubjectX500Principal().getName());
         setIssuerDn(cert.getIssuerX500Principal().getName());
         setSerialNumber(cert.getSerialNumber().toString());
@@ -92,7 +87,7 @@ public class CertificateModel {
         setRevocationReason(null);
         setRevokedAt(null);
 
-        setCreatedAt(LocalDateTime.now());
-        setUpdatedAt(LocalDateTime.now());
+        X500Name name = new X500Name(cert.getSubjectX500Principal().getName());
+        setOrganization(name.getRDNs(BCStyle.O)[0].getFirst().getValue().toString());
     }
 }

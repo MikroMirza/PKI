@@ -1,6 +1,7 @@
 package rs.tim33.PKI.Services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import rs.tim33.PKI.Models.Role;
@@ -15,23 +16,22 @@ public class UserService {
 	private UserRepository userRepo;
 	
 	@Autowired
-	private KeystoreService keystoreService;
+	private KeyHelper keyHelper;
 	
 	@Autowired
-	private KeyHelper keyHelper;
+	private PasswordEncoder passEncoder;
 	
 	public UserModel registerEndUser(String email, String password, String name, String surname, String org) throws Exception {
 		UserModel user = new UserModel();
 		user.setEmail(email);
 		//TODO: HASH THIS OR SMTH
-		user.setPasswordHash(password);
+		user.setPasswordHash(passEncoder.encode(password));
 		user.setName(name);
 		user.setSurname(surname);
-		user.setPrivateOrganisation(org);
+		user.setOrganization(org);
 		user.setRole(Role.USER);
 		user.setKeystorePasswordEncrypted(keyHelper.generateEncryptedKeystoreKey());
 		
-		keystoreService.createKeystoreForUser(user);
 		return userRepo.save(user);
 	}
 }

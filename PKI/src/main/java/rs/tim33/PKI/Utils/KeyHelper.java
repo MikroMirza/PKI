@@ -1,6 +1,10 @@
 package rs.tim33.PKI.Utils;
 
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
 import javax.crypto.KeyGenerator;
@@ -44,11 +48,22 @@ public class KeyHelper {
         return orgMasterKey.getEncoded();
     }
     
-    public String encodeKey(byte[] key) {
+    //TODO
+    public PrivateKey decryptPrivateKey(byte[] key, byte[] password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    	PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(key);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(spec);
+    }
+    
+    public byte[] encryptPrivateKey(PrivateKey key, byte[] password) {
+    	return key.getEncoded();
+    }
+    
+    public String encodeBytes(byte[] key) {
     	return Base64.getEncoder().encodeToString(key);
     }
     
-    public byte[] decodeKey(String key) {
+    public byte[] decodeBytes(String key) {
     	return Base64.getDecoder().decode(key);
     }
 }
