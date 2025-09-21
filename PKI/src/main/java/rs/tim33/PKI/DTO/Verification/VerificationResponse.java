@@ -5,9 +5,16 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VerificationResponse {
-	private String message;
-	
-	public VerificationResponse(String message) {
-		this.message = message;	
-	}
+    private boolean success;
+    private String message;
+    private String errorCode;
+
+    public VerificationResponse() {}
+
+    public VerificationResponse(boolean success, String message, String errorCode) {
+        this.success = success;
+        this.message = message;
+        this.errorCode = errorCode;
+    }
+
 }
