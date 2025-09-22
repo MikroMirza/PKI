@@ -1,0 +1,19 @@
+Login page
+<div>
+Email
+<input #emailInput type="email" [(ngModel)]="email">
+</div><div>
+Password
+<input #passwordInput type="password" [(ngModel)]="password">
+</div>
+
+<button (click)="login()">
+    Log in
+</button>
+<button>
+    Register
+</button>
+
+<div style="color: red; margin-top: 8px;">
+  {{ errorMessage }}
+</div>

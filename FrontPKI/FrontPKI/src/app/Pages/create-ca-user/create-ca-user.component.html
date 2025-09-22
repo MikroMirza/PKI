@@ -1,0 +1,7 @@
+<div>Email: <input #emailInput type="email" [(ngModel)]="email"></div>
+<div>Name: <input #nameInput [(ngModel)]="name"></div>
+<div>Surname: <input #surnameInput [(ngModel)]="surname"></div>
+<div>Password: <input #passwordInput type="password" [(ngModel)]="password"></div>
+<div>Organization: <input #organizationInput [(ngModel)]="organization"></div>
+<button (click)="createClicked()">Create</button>
+<div style="color: red;">{{errorMessage}}</div>

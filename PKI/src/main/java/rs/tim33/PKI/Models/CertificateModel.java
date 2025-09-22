@@ -36,6 +36,8 @@ public class CertificateModel {
     private LocalDateTime notBefore;
     private LocalDateTime notAfter;
     private String organization;
+    @Column(columnDefinition = "CLOB")
+    private byte[] publicKey;
     @Lob
     private byte[] encryptedPrivateKey;
     
@@ -89,5 +91,6 @@ public class CertificateModel {
 
         X500Name name = new X500Name(cert.getSubjectX500Principal().getName());
         setOrganization(name.getRDNs(BCStyle.O)[0].getFirst().getValue().toString());
+        setPublicKey(cert.getPublicKey().getEncoded());
     }
 }

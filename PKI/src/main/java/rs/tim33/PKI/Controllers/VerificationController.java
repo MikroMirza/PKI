@@ -20,10 +20,4 @@ public class VerificationController {
     @Autowired
     private VerificationService verificationService;
     
-    @GetMapping("verification")
-    public ResponseEntity<VerificationResponse> verifyUser(@RequestParam("token") String token) {
-    	String decodedToken = URLDecoder.decode(token, StandardCharsets.UTF_8);
-    	verificationService.verify(decodedToken);
-        return ResponseEntity.ok(new VerificationResponse("User verified successfully!"));
-    }
 }

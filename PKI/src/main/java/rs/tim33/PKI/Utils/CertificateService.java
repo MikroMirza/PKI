@@ -10,6 +10,8 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import rs.tim33.PKI.Models.CertificateModel;
+import rs.tim33.PKI.Models.Role;
 import rs.tim33.PKI.Models.UserModel;
 import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Repositories.UserRepository;
@@ -52,7 +55,8 @@ public class CertificateService {
 	
 	@Autowired
 	private KeyHelper keyHelper;
-	
+	@Autowired
+	private LoggedUserUtils loggedUserUtils;
 	
 	public PrivateKey getPrivateKeyOfCert(Long certificateId) throws Exception {
 		CertificateModel cert = certRepo.findById(certificateId).orElse(null);
@@ -166,5 +170,18 @@ public class CertificateService {
         certRepo.save(certModel);
         
 		return new KeyPairAndCert(keyPair, cert);
+	}
+	
+	public List<CertificateModel> getAllCertificates() {
+		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
+			return certRepo.findAll();
+		if(loggedUserUtils.getLoggedInRole() == Role.CA)
+			return certRepo.findByOrganization(loggedUserUtils.getLoggedInOrganization());
+		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
+			return certRepo.findAll()
+					.stream()
+					.filter(t -> {return (t.getOwnerUser() != null && t.getOwnerUser().getEmail().equals(loggedUserUtils.getLoggedInUser().getEmail()));}).toList();
+		
+		return new ArrayList<CertificateModel>();
 	}
 }

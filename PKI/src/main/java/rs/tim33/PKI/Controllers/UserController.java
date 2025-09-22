@@ -36,6 +36,18 @@ public class UserController {
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}
 	
+	@PostMapping("/ca")
+	public ResponseEntity<Void> registerCaUser(@RequestBody RegisterUserDTO data){
+		try {
+			userService.registerCaUser(data.email, data.password, data.name, data.surname, data.organization);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+		}
+		
+		return new ResponseEntity<Void>(HttpStatus.OK);
+	}
+	
 	@GetMapping("/verification")
 	public ResponseEntity<VerificationResponse> verifyUser(@RequestParam("token") String token) {
 	    try {

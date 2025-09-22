@@ -1,14 +1,18 @@
 package rs.tim33.PKI.Controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import rs.tim33.PKI.DTO.Certificate.CreateIntermediateDTO;
+import rs.tim33.PKI.DTO.Certificate.SimpleCertificateDTO;
 import rs.tim33.PKI.Utils.CertificateService;
 
 @RestController
@@ -26,5 +30,10 @@ public class CertificateController {
 			e.printStackTrace();
 		}
 		return new ResponseEntity<Void>(HttpStatus.OK);
+	}
+	
+	@GetMapping
+	public ResponseEntity<List<SimpleCertificateDTO>> getCertificates(){
+		return ResponseEntity.ok(certService.getAllCertificates().stream().map(t -> new SimpleCertificateDTO(t)).toList());
 	}
 }
