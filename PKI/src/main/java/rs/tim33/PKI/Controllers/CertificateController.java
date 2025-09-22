@@ -24,10 +24,10 @@ public class CertificateController {
 	@PostMapping("/intermediate")
 	public ResponseEntity<Void> createIntermediate(@RequestBody CreateIntermediateDTO data){
 		try {
-			certService.createIntermediate(data.issuerId, data.organization, data.organizationUnit, data.daysValid);
+			certService.createIntermediate(data.issuerId, data.cn, data.organization, data.organizationUnit, data.notBefore, data.notAfter, data.pathLenConstraint);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		}
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}
