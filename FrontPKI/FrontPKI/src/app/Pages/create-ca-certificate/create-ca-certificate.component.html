@@ -1,0 +1,17 @@
+<h1>Create CA certificate</h1>
+
+<div>Issuer certificate ID <input type="number" [(ngModel)]="issuerId"></div>
+<div>Subject common name <input [(ngModel)]="cn"></div>
+<div>Organization name <input [(ngModel)]="org"></div>
+<div>Organization unit name <input [(ngModel)]="orgUnit"></div>
+<div>Not Before <input type="datetime-local" [(ngModel)]="notBefore"></div>
+<div>Not After <input type="datetime-local" [(ngModel)]="notAfter"></div>
+<div>Max number of intermediate CAs <input type="number" [(ngModel)]="maxIntermediate"></div>
+<button (click)="create()">Create</button>
+
+<div style="color: red;">{{errorMessage}}</div>
+<div style="color: blue;">{{successMessage}}</div>
+
+<h3>Available Issuer Certificates:</h3>
+<app-certificate-table [certData]="(certData$ | async) ?? []">
+</app-certificate-table>
