@@ -1,24 +1,23 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RegisterUserDTO } from '../../DTO/User/RegisterUserDTO';
 import { UserService } from '../../Services/user.service';
 import { Router } from '@angular/router';
+import { RegisterUserDTO } from '../../DTO/User/RegisterUserDTO';
 
 @Component({
-  selector: 'app-create-ca-user',
-  standalone: true,
+  selector: 'app-registration',
+  standalone:true,
   imports: [FormsModule],
-  templateUrl: './create-ca-user.component.html',
-  styleUrl: './create-ca-user.component.css'
+  templateUrl: './registration.html',
+  styleUrl: './registration.css'
 })
-export class CreateCaUserComponent {
-  email: string = "";
-  name: string = "";
-  surname: string = "";
-  organization: string = "";
-  password: string = "";
-
-  errorMessage: string = "";
+export class RegistrationComponent {
+  email:string='';
+  password:string='';
+  name:string='';
+  surname:string='';
+  organization:string='';
+  errorMessage:string='';
 
   constructor(private userService: UserService, private cd: ChangeDetectorRef, private router: Router){}
 
@@ -30,13 +29,13 @@ export class CreateCaUserComponent {
   data.organization = this.organization;
   data.password = this.password;
 
-  this.userService.createCaUser(data).subscribe({
+  this.userService.creatRegularUser(data).subscribe({
     complete: () => {
-      this.router.navigateByUrl("/mainpage");
+      this.router.navigateByUrl("");
     },
     error: (err) => {
       this.errorMessage = err.error?.message || 'Unknown error';
-      console.error("Validation error:", err.error);
+      console.error("Validation error:", err.error); 
       this.cd.detectChanges();
     }
   });

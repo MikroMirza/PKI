@@ -47,6 +47,9 @@ public class AuthController {
 		UserModel u = userRepo.findByEmail(data.email).orElse(null);
 		if(u == null)
 			return ResponseEntity.notFound().build();
+		if(!u.isVerified()) {
+			return ResponseEntity.notFound().build();
+		}
 		
 		LoginResponse data2 = new LoginResponse();
 		data2.jwt = jwtUtils.generateToken(u.getEmail(), u.getRole());

@@ -31,4 +31,7 @@ export class MainPageComponent {
         this.certData$ = this.certService.getCertificates()
       })
   }
+  logout(){
+    this.authService.logout;
+  }
 }

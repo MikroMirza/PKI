@@ -43,4 +43,7 @@ export class LoginpageComponent {
         }
       });
   }
+  register() {
+    this.router.navigateByUrl("/users/new");
+  }
 }

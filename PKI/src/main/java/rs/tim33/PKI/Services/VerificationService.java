@@ -41,7 +41,7 @@ public class VerificationService {
         tokenRepo.save(verificationToken);
 
         String verificationUrl = "http://localhost:4200/authentication/verification?token=" + token;
-        //String verificationUrl = "http://192.168.2.8:8080/api/verify?token=" + token;
+//        String verificationUrl = "http://192.168.2.8:8080/api/verify?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(user.getEmail());
@@ -68,8 +68,11 @@ public class VerificationService {
         if (optUser.isEmpty()) {
             throw new VerificationTokenException("No user", "BAD_TOKEN");
         }
-
+        
         UserModel user = optUser.get();
+        if(user.isVerified()==true) {
+        	throw new VerificationTokenException("This user is already verified", "ALREADY_VERIFIED");
+        }
         user.setVerified(true);
         userRepo.save(user);
     }

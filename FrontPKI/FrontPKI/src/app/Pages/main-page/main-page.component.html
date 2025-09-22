@@ -10,3 +10,6 @@
 </button>
 <app-certificate-table [certData]="(certData$ | async) || []">
 </app-certificate-table>
+<button [routerLink]="''" (click)="logout()">
+    Logout
+</button>
