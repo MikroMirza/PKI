@@ -53,6 +53,7 @@ public class UserService {
 		user.setSurname(surname);
 		user.setOrganization(org);
 		user.setRole(Role.CA);
+		user.setVerified(true);
 		user.setKeystorePasswordEncrypted(keyHelper.generateEncryptedKeystoreKey());
 		
 		return userRepo.save(user);

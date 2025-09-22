@@ -34,17 +34,17 @@ public class SimpleCertificateDTO {
     	if (subjectName.getRDNs(BCStyle.CN).length > 0)
     		this.subjectCN = subjectName.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString();
     	if (subjectName.getRDNs(BCStyle.O).length > 0)
-    		this.subjectCN = subjectName.getRDNs(BCStyle.O)[0].getFirst().getValue().toString();
+    		this.subjectO = subjectName.getRDNs(BCStyle.O)[0].getFirst().getValue().toString();
     	if (subjectName.getRDNs(BCStyle.OU).length > 0)
-    		this.subjectCN = subjectName.getRDNs(BCStyle.OU)[0].getFirst().getValue().toString();
+    		this.subjectOU = subjectName.getRDNs(BCStyle.OU)[0].getFirst().getValue().toString();
 
-    	X500Name issuerName = new X500Name(cert.getSubjectDn());
+    	X500Name issuerName = new X500Name(cert.getIssuerDn());
     	if (issuerName.getRDNs(BCStyle.CN).length > 0)
-    		this.subjectCN = issuerName.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString();
+    		this.issuerCN = issuerName.getRDNs(BCStyle.CN)[0].getFirst().getValue().toString();
     	if (issuerName.getRDNs(BCStyle.O).length > 0)
-    		this.subjectCN = issuerName.getRDNs(BCStyle.O)[0].getFirst().getValue().toString();
+    		this.issuerO = issuerName.getRDNs(BCStyle.O)[0].getFirst().getValue().toString();
     	if (issuerName.getRDNs(BCStyle.OU).length > 0)
-    		this.subjectCN = issuerName.getRDNs(BCStyle.OU)[0].getFirst().getValue().toString();
+    		this.issuerOU = issuerName.getRDNs(BCStyle.OU)[0].getFirst().getValue().toString();
 
     	publicKey = Base64.getEncoder().encodeToString(cert.getPublicKey());
     	notBefore = cert.getNotBefore();

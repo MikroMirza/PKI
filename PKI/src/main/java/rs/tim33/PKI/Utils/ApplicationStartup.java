@@ -35,6 +35,7 @@ public class ApplicationStartup {
 			admin.setSurname("Hadzi Djukic");
 			admin.setPasswordHash(passwordEncoder.encode("pass1234"));
 			admin.setRole(Role.ADMIN);
+			admin.setVerified(true);
 			userRepo.save(admin);
 		} catch (CertificateException | CertIOException | OperatorCreationException | NoSuchAlgorithmException e) {
 			e.printStackTrace();

@@ -1,0 +1,28 @@
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Subject CN</th>
+            <th>Subject O</th>
+            <th>Subject OU</th>
+            <th>Issuer CN</th>
+            <th>Issuer O</th>
+            <th>Issuer OU</th>
+            <th>Not before</th>
+            <th>Not after</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let cert of certData">
+            <td>{{cert.id}}</td>
+            <td>{{cert.subjectCN}}</td>
+            <td>{{cert.subjectO}}</td>
+            <td>{{cert.subjectOU}}</td>
+            <td>{{cert.issuerCN}}</td>
+            <td>{{cert.issuerO}}</td>
+            <td>{{cert.issuerOU}}</td>
+            <td>{{cert.notBefore}}</td>
+            <td>{{cert.notAfter}}</td>
+        </tr>
+    </tbody>
+</table>
