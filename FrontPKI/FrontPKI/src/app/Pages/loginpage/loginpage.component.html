@@ -1,19 +1,12 @@
-Login page
-<div>
-Email
-<input #emailInput type="email" [(ngModel)]="email">
-</div><div>
-Password
-<input #passwordInput type="password" [(ngModel)]="password">
-</div>
-
-<button (click)="login()">
-    Log in
-</button>
-<button (click)="register()">
-    Register
-</button>
-
-<div style="color: red; margin-top: 8px;">
-  {{ errorMessage }}
+<div class="container">
+  <h2>Login</h2>
+  <div class="colored-div">
+    <div>Email</div>
+    <input type="email" [(ngModel)]="email">
+    <div>Password</div>
+    <input type="password" [(ngModel)]="password">
+    <button (click)="login()">Log in</button>
+    <button (click)="register()">Register</button>
+    <div class="error-message">{{ errorMessage }}</div>
+  </div>
 </div>
