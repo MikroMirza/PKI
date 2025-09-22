@@ -1,7 +1,12 @@
-<div>Email: <input #emailInput type="email" [(ngModel)]="email"></div>
-<div>Name: <input #nameInput [(ngModel)]="name"></div>
-<div>Surname: <input #surnameInput [(ngModel)]="surname"></div>
-<div>Password: <input #passwordInput type="password" [(ngModel)]="password"></div>
-<div>Organization: <input #organizationInput [(ngModel)]="organization"></div>
-<button (click)="createClicked()">Create</button>
-<div style="color: red;">{{errorMessage}}</div>
+<div class="container">
+  <h2>Create User</h2>
+  <div class="colored-div">
+    <input placeholder="Email" type="email" [(ngModel)]="email">
+    <input placeholder="Name" type="text" [(ngModel)]="name">
+    <input placeholder="Surname" type="text" [(ngModel)]="surname">
+    <input placeholder="Password" type="password" [(ngModel)]="password">
+    <input placeholder="Organization" type="text" [(ngModel)]="organization">
+    <button (click)="createClicked()">Create</button>
+  </div>
+  <div class="error-message">{{ errorMessage }}</div>
+</div>

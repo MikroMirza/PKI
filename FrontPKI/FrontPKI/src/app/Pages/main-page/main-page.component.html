@@ -1,15 +1,19 @@
-<h1 *ngIf="(role=='ADMIN')">Admin page</h1>
-<h1 *ngIf="(role=='CA')">CA page</h1>
-<h1 *ngIf="(role=='USER')">User page</h1>
+<div class="container">
+  <h1 *ngIf="role === 'ADMIN'">Admin page</h1>
+  <h1 *ngIf="role === 'CA'">CA page</h1>
+  <h1 *ngIf="role === 'USER'">User page</h1>
 
-<button *ngIf="(role=='ADMIN')" [routerLink]="['/users/ca/new']">
-    Create CA user
-</button>
-<button *ngIf="(role=='ADMIN' || role=='CA')" [routerLink]="['/certificates/ca/new']">
-    Create CA certificate
-</button>
-<app-certificate-table [certData]="(certData$ | async) || []">
-</app-certificate-table>
-<button [routerLink]="''" (click)="logout()">
-    Logout
-</button>
+  <div class="button-row">
+    <button *ngIf="role === 'ADMIN'" [routerLink]="['/users/ca/new']">
+      Create CA user
+    </button>
+    <button *ngIf="role === 'ADMIN' || role === 'CA'" [routerLink]="['/certificates/ca/new']">
+      Create CA certificate
+    </button>
+    <button (click)="logout()">Logout</button>
+  </div>
+
+  <div class="table-container">
+    <app-certificate-table [certData]="(certData$ | async) || []"></app-certificate-table>
+  </div>
+</div>
