@@ -21,6 +21,8 @@ public class SimpleCertificateDTO {
 	public String issuerO;
 	public String issuerOU;
 	public String publicKey;
+	public Boolean isEndEntity;
+	public Integer pathLen;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime notBefore;
@@ -49,5 +51,14 @@ public class SimpleCertificateDTO {
     	publicKey = Base64.getEncoder().encodeToString(cert.getPublicKey());
     	notBefore = cert.getNotBefore();
     	notAfter = cert.getNotAfter();
+    	
+    	try {
+			pathLen = cert.GetPathLenConstraint();
+			isEndEntity = false;
+			if(pathLen == -1)
+				isEndEntity = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
 }

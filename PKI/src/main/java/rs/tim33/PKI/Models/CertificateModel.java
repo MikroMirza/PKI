@@ -1,5 +1,8 @@
 package rs.tim33.PKI.Models;
 
+import java.io.ByteArrayInputStream;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -7,6 +10,7 @@ import java.util.List;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x509.BasicConstraints;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -92,5 +96,21 @@ public class CertificateModel {
         X500Name name = new X500Name(cert.getSubjectX500Principal().getName());
         setOrganization(name.getRDNs(BCStyle.O)[0].getFirst().getValue().toString());
         setPublicKey(cert.getPublicKey().getEncoded());
+    }
+    
+    public int GetPathLenConstraint() throws Exception {
+    	CertificateFactory cf;
+		try {
+			cf = CertificateFactory.getInstance("X.509");
+	    	X509Certificate decodedCert = (X509Certificate) cf.generateCertificate(
+	    	        new ByteArrayInputStream(this.certData)
+	    	        );
+	    	
+	    	return decodedCert.getBasicConstraints();
+		} catch (CertificateException e) {
+			e.printStackTrace();
+			throw new Exception();
+		}
+    	
     }
 }
