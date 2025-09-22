@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,9 +17,12 @@ import rs.tim33.PKI.DTO.Auth.LoginDTO;
 import rs.tim33.PKI.DTO.Auth.LoginResponse;
 import rs.tim33.PKI.DTO.Auth.RefreshRequest;
 import rs.tim33.PKI.DTO.Auth.RefreshResponse;
+import rs.tim33.PKI.Exceptions.ErrorMessage;
+import rs.tim33.PKI.Exceptions.LoginException;
 import rs.tim33.PKI.Models.UserModel;
 import rs.tim33.PKI.Repositories.RefreshTokenRepository;
 import rs.tim33.PKI.Repositories.UserRepository;
+import rs.tim33.PKI.Services.AuthService;
 import rs.tim33.PKI.Services.RefreshTokenService;
 import rs.tim33.PKI.Utils.JwtUtils;
 
@@ -39,26 +43,39 @@ public class AuthController {
 	@Autowired
 	private UserRepository userRepo;
 	
+	@Autowired
+	private AuthService authService;
+	
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponse> login(@RequestBody LoginDTO data){
-		Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(data.email, data.password));
-		UserDetails user = (UserDetails)authentication.getPrincipal();
-		
-		UserModel u = userRepo.findByEmail(data.email).orElse(null);
-		if(u == null)
-			return ResponseEntity.notFound().build();
-		if(!u.isVerified()) {
-			return ResponseEntity.notFound().build();
-		}
-		
-		LoginResponse data2 = new LoginResponse();
-		data2.jwt = jwtUtils.generateToken(u.getEmail(), u.getRole());
-		data2.refresh = refreshService.createRefreshToken(user.getUsername()).getToken();
-		data2.role = u.getRole().toString();
-		System.out.println("ALOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO " + u.getRole().toString());
-		
-		return ResponseEntity.ok(data2);
+	public ResponseEntity<?> login(@RequestBody LoginDTO data) {
+	    try {
+	        Authentication authentication = authManager.authenticate(
+	            new UsernamePasswordAuthenticationToken(data.email, data.password)
+	        );
+	        UserDetails user = (UserDetails) authentication.getPrincipal();
+
+	        UserModel u = userRepo.findByEmail(data.email).orElse(null);
+	        LoginResponse loginResp = authService.getLoginResponse(u, user.getUsername());
+
+	        return ResponseEntity.ok(loginResp);
+
+	    } catch (LoginException ex) {
+	        return ResponseEntity
+	                .status(HttpStatus.UNAUTHORIZED)
+	                .body(new ErrorMessage(ex.getMessage(), ex.getErrorCode()));
+	    } catch (BadCredentialsException ex) {
+	        return ResponseEntity
+	                .status(HttpStatus.UNAUTHORIZED)
+	                .body(new ErrorMessage("Invalid email or password", "INVALID_CREDENTIALS"));
+	    } catch (Exception ex) {
+	        ex.printStackTrace();
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new ErrorMessage("Unexpected error", "INTERNAL_ERROR"));
+	    }
 	}
+
+
 	
 	@PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshRequest data) {
