@@ -13,6 +13,6 @@ public class ValidateArgumentsException extends RuntimeException {
 	
 	public ValidateArgumentsException(String message) {
 		super(message);
-		this.errorCode = "ERR";
+		this.errorCode = "ERR_VALIDATION";
 	}
 }

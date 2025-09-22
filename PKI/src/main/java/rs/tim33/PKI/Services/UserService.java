@@ -21,6 +21,7 @@ public class UserService {
 	
 	@Autowired
 	private VerificationService verificationService;
+	
 	@Autowired
 	private PasswordEncoder passEncoder;
 	
