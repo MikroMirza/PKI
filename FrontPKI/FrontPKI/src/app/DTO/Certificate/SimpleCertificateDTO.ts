@@ -9,4 +9,6 @@ export class SimpleCertificateDTO{
 	publicKey: string = "";
     notBefore: string = "";
     notAfter: string = "";
+	isEndEntity: boolean = false;
+	pathLen: number = -1;
 }

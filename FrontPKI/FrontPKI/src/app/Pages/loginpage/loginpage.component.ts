@@ -24,11 +24,6 @@ export class LoginpageComponent {
     console.log(this.authService.getAccessToken())
     console.log(this.authService.refreshTokenValue)
     console.log(this.authService.getRole())
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationEnd)
-        if(this.authService.isLoggedIn())
-          this.router.navigateByUrl("/mainpage");
-    })
   }
 
   login() {

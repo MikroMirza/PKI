@@ -63,7 +63,7 @@ export class CreateCaCertificateComponent {
     data.isEndEntity = this.isEndEntity;
 
     this.certService.createIntermediate(data).subscribe({
-      error: (err) => this.errorMessage = err?.message,
+      error: (err) => {this.errorMessage = err.error?.message, this.cd.detectChanges()},
       next: (res) => {this.successMessage = "SUCCESS!", this.loadCerts()}
     })
   }
