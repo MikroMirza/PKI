@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CertificateService } from '../../Services/certificate.service';
 import { CertificateTableComponent } from "../../Components/certificate-table/certificate-table.component";
 import { AsyncPipe } from '@angular/common';
-import { CreateIntermediateDTO } from '../../DTO/Certificate/CreateIntermediateDTO';
+import { CreateCertificateDTO } from '../../DTO/Certificate/CreateIntermediateDTO';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -32,6 +32,7 @@ export class CreateCaCertificateComponent {
   notBefore: String = "";
   notAfter: String = "";
   maxIntermediate: number = 0;
+  isEndEntity: boolean = false;
 
   errorMessage: String = "";
   successMessage: String = "";
@@ -51,7 +52,7 @@ export class CreateCaCertificateComponent {
     this.errorMessage = ""
     this.successMessage = ""
 
-    let data = new CreateIntermediateDTO();
+    let data = new CreateCertificateDTO();
     data.issuerId = this.issuerId;
     data.cn = this.cn;
     data.organization = this.org;
@@ -59,7 +60,7 @@ export class CreateCaCertificateComponent {
     data.notBefore = this.notBefore;
     data.notAfter = this.notAfter;
     data.pathLenConstraint = this.maxIntermediate;
-    console.log(data);
+    data.isEndEntity = this.isEndEntity;
 
     this.certService.createIntermediate(data).subscribe({
       error: (err) => this.errorMessage = err?.message,

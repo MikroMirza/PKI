@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import rs.tim33.PKI.DTO.Certificate.CreateIntermediateDTO;
+import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.SimpleCertificateDTO;
 import rs.tim33.PKI.Utils.CertificateService;
 
@@ -22,9 +22,9 @@ public class CertificateController {
 	private CertificateService certService;
 	
 	@PostMapping("/intermediate")
-	public ResponseEntity<Void> createIntermediate(@RequestBody CreateIntermediateDTO data){
+	public ResponseEntity<Void> createIntermediate(@RequestBody CreateCertificateDTO data){
 		try {
-			certService.createIntermediate(data.issuerId, data.cn, data.organization, data.organizationUnit, data.notBefore, data.notAfter, data.pathLenConstraint);
+			certService.createCertificate(data.issuerId, data.cn, data.organization, data.organizationUnit, data.notBefore, data.notAfter, data.pathLenConstraint, data.isEndEntity);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);

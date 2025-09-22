@@ -101,7 +101,7 @@ public class CertificateService {
         return new KeyPairAndCert(keyPair, cert);
 	}
 	
-	public KeyPairAndCert createIntermediate(Long parentCertId, String cn, String org, String orgUnit, LocalDateTime notBefore, LocalDateTime notAfter, int pathLenConstraint) throws Exception {
+	public KeyPairAndCert createCertificate(Long parentCertId, String cn, String org, String orgUnit, LocalDateTime notBefore, LocalDateTime notAfter, int pathLenConstraint, boolean isEndEntity) throws Exception {
 		CertificateModel parentCert = certRepo.findById(parentCertId).orElse(null);
 		
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
@@ -121,7 +121,13 @@ public class CertificateService {
                         subject,
                         keyPair.getPublic());
 		
-        certBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(pathLenConstraint));
+        BasicConstraints constraint;
+        if(isEndEntity)
+        	constraint = new BasicConstraints(false);
+        else
+        	constraint = new BasicConstraints(pathLenConstraint);
+        
+        certBuilder.addExtension(Extension.basicConstraints, true, constraint);
         
         //Create certificate
         ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(getPrivateKeyOfCert(parentCertId));
@@ -130,43 +136,6 @@ public class CertificateService {
         //Persist it in the database
         CertificateModel certModel = new CertificateModel(cert, parentCert, org);
         byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(org)).getEncoded();
-        byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
-        certModel.setEncryptedPrivateKey(encryptedPrivateKey);
-        
-        certRepo.save(certModel);
-        
-		return new KeyPairAndCert(keyPair, cert);
-	}
-	
-	public KeyPairAndCert createEndEntity(Long parentCertId, Long endUserId, String certName, int daysValid) throws Exception {
-		CertificateModel parentCert = certRepo.findById(parentCertId).orElse(null);
-		UserModel user = userRepo.findById(endUserId).orElse(null);
-		
-		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(2048);
-        KeyPair keyPair = keyGen.generateKeyPair();
-		
-		long now = System.currentTimeMillis();
-        Date startDate = new Date(now);
-        Date endDate = new Date(now + daysValid * 24L * 60 * 60 * 1000);
-        
-        X500Name subject = new X500Name("CN="+user.getName() + certName + ", O="+user.getOrganization());
-        X500Name issuer = new X500Name(parentCert.getSubjectDn());
-        BigInteger serial = BigInteger.valueOf(now);
-        
-        JcaX509v3CertificateBuilder certBuilder =
-                new JcaX509v3CertificateBuilder(
-                        issuer, serial, startDate, endDate, subject, keyPair.getPublic());
-		
-        certBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
-        
-        //Create certificate
-        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(getPrivateKeyOfCert(parentCertId));
-        X509Certificate cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
-        
-        //Persist it in the database
-        CertificateModel certModel = new CertificateModel(cert, parentCert, user.getOrganization());
-        byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(user.getOrganization())).getEncoded();
         byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
         certModel.setEncryptedPrivateKey(encryptedPrivateKey);
         

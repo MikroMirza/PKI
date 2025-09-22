@@ -1,4 +1,4 @@
-export class CreateIntermediateDTO{
+export class CreateCertificateDTO{
 	issuerId: number = 0;
 	cn: String = "";
 	organization: String = "";
@@ -6,4 +6,5 @@ export class CreateIntermediateDTO{
 	notBefore: String = "";
 	notAfter: String = "";
 	pathLenConstraint: number = 0;
+	isEndEntity: boolean = false;
 }

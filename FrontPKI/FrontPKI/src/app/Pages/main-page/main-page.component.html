@@ -5,7 +5,7 @@
 <button *ngIf="(role=='ADMIN')" [routerLink]="['/users/ca/new']">
     Create CA user
 </button>
-<button *ngIf="(role=='ADMIN')" [routerLink]="['/certificates/ca/new']">
+<button *ngIf="(role=='ADMIN' || role=='CA')" [routerLink]="['/certificates/ca/new']">
     Create CA certificate
 </button>
 <app-certificate-table [certData]="(certData$ | async) || []">

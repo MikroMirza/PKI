@@ -7,6 +7,7 @@
 <div>Not Before <input type="datetime-local" [(ngModel)]="notBefore"></div>
 <div>Not After <input type="datetime-local" [(ngModel)]="notAfter"></div>
 <div>Max number of intermediate CAs <input type="number" [(ngModel)]="maxIntermediate"></div>
+<div>Is end entity? <input type="checkbox" [(ngModel)]="isEndEntity"></div>
 <button (click)="create()">Create</button>
 
 <div style="color: red;">{{errorMessage}}</div>
