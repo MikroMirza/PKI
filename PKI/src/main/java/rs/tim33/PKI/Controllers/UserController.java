@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import rs.tim33.PKI.DTO.User.RegisterUserDTO;
 import rs.tim33.PKI.DTO.Verification.VerificationResponse;
+import rs.tim33.PKI.Exceptions.ErrorMessage;
+import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
 import rs.tim33.PKI.Exceptions.VerificationTokenException;
 import rs.tim33.PKI.Services.UserService;
 import rs.tim33.PKI.Services.VerificationService;
@@ -25,27 +27,38 @@ public class UserController {
 	private VerificationService verificationService;
 	
 	@PostMapping("/regular")
-	public ResponseEntity<Void> registerRegularUser(@RequestBody RegisterUserDTO data){
+	public ResponseEntity<?> registerRegularUser(@RequestBody RegisterUserDTO data){
 		try {
 			userService.registerEndUser(data.email, data.password, data.name, data.surname, data.organization);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		}
+	    } catch (ValidateArgumentsException ex) {
+	        return ResponseEntity
+	                .badRequest()
+	                .body(new ErrorMessage(ex.getMessage(), ex.getErrorCode()));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new ErrorMessage("Unexpected error", "INTERNAL_ERROR"));
+	    }
 		
-		return new ResponseEntity<Void>(HttpStatus.OK);
+        return ResponseEntity.ok().build();
 	}
 	
 	@PostMapping("/ca")
-	public ResponseEntity<Void> registerCaUser(@RequestBody RegisterUserDTO data){
-		try {
-			userService.registerCaUser(data.email, data.password, data.name, data.surname, data.organization);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
-		}
-		
-		return new ResponseEntity<Void>(HttpStatus.OK);
+	public ResponseEntity<?> registerCaUser(@RequestBody RegisterUserDTO data){
+	    try {
+	        userService.registerCaUser(data.email, data.password, data.name, data.surname, data.organization);
+	        return ResponseEntity.ok().build();
+	    } catch (ValidateArgumentsException ex) {
+	        return ResponseEntity
+	                .badRequest()
+	                .body(new ErrorMessage(ex.getMessage(), ex.getErrorCode()));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new ErrorMessage("Unexpected error", "INTERNAL_ERROR"));
+	    }
 	}
 	
 	@GetMapping("/verification")

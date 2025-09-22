@@ -47,6 +47,7 @@ public class SecurityConfig {
 			.requestMatchers("/h2-console/**").permitAll()
 			.requestMatchers("/api/auth/login").permitAll()
 			.requestMatchers("/api/users/regular").permitAll()
+            .requestMatchers("/api/users/verification").permitAll()
 			.anyRequest().authenticated();
 		})
 		.cors(Customizer.withDefaults())

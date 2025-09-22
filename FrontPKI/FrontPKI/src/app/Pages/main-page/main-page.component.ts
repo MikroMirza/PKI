@@ -24,4 +24,7 @@ export class MainPageComponent {
     })
     this.role = this.authService?.getRole() ?? ""
   }
+  logout(){
+    this.authService.logout;
+  }
 }

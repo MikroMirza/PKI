@@ -24,6 +24,10 @@ export class UserService {
     });
   }
 
+  creatRegularUser(data: RegisterUserDTO){
+    return this.http.post(`${environment.apiHost}/api/users/regular`, data)
+  }
+
   createCaUser(data: RegisterUserDTO){
     return this.http.post(`${environment.apiHost}/api/users/ca`, data)
   }
