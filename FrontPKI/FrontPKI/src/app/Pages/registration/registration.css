@@ -1,0 +1,101 @@
+/* Base styles */
+* {
+    font-size: 14px;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    height: 100%;
+    width: 100%;
+    background-color: #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Main container */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* vertically center content */
+    width: 100%;
+    min-height: 80vh; /* shrink container a bit to fit nicely */
+}
+
+/* Headings */
+h1, h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: var(--dreadhead-blue);
+    padding: 2%;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: 40px;
+}
+
+h2 {
+    font-size: 35px;
+}
+
+/* Colored box for form */
+.colored-div {
+    opacity: 0.3;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    margin-bottom: 10px; /* smaller margin since error is separate */
+    width: 25%;
+}
+
+/* Paragraph text */
+p {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 90%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.button, button {
+    width: 60%;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 20px;
+    background-color: #5e5a5a; 
+    color: white;
+    font-weight: 600;
+    border: none;
+    transition: all 0.2s ease-in-out
+}
+
+.button:hover, button:hover {
+    cursor: pointer;
+    background-color: #111;
+}
+
+.error-message {
+    color: red;
+    margin-top: 15px;
+    text-align: center;
+    min-height: 20px;
+    width: 60%; 
+    word-wrap: break-word; 
+}
