@@ -11,6 +11,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -20,7 +21,12 @@ import javax.security.sasl.AuthenticationException;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.CRLDistPoint;
+import org.bouncycastle.asn1.x509.DistributionPoint;
+import org.bouncycastle.asn1.x509.DistributionPointName;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
@@ -139,6 +145,12 @@ public class CertificateService {
 		
 		
 		CertificateModel parentCert = certRepo.findById(parentCertId).orElse(null);
+		
+		if (parentCert.isRevoked()) {
+		    throw new InvalidIssuerException("Cannot issue a certificate: the parent certificate has been revoked.");
+		}
+
+		
 		if(parentCert == null)
 			throw new InvalidCertificateRequestException("Nonexistent issuer certificate");
 		if(notBefore.isBefore(parentCert.getNotBefore()))
@@ -149,6 +161,7 @@ public class CertificateService {
 		if(parentCert.getNotAfter().isBefore(LocalDateTime.now()))
 			throw new InvalidIssuerException("The issuing certificate has expired");
 			
+	
 		//Check path len
 		try {
 			if(!isEndEntity && pathLenConstraint >= parentCert.GetPathLenConstraint())
@@ -213,6 +226,22 @@ public class CertificateService {
         
         try {
 			certBuilder.addExtension(Extension.basicConstraints, true, constraint);
+			//!!!!! MIGHT BE WRONG
+			certBuilder.addExtension(
+				    Extension.cRLDistributionPoints,
+				    false,
+				    new CRLDistPoint(new DistributionPoint[] {
+				        new DistributionPoint(
+				            new DistributionPointName(
+				                new GeneralNames(
+				                    new GeneralName(GeneralName.uniformResourceIdentifier,
+				                        "http://localhost:8080/crl/" + parentCertId + ".crl"))),
+				            null,
+				            null)
+				    })
+				);
+
+			
 		} catch (CertIOException e) {
 			e.printStackTrace();
 			throw new CertificateGenerationException("Error setting certificate basic constraints");
@@ -254,4 +283,22 @@ public class CertificateService {
 		
 		return new ArrayList<CertificateModel>();
 	}
+	
+	public void revokeCertificate(CertificateModel cert, String reason) {
+		if(cert.isRevoked())
+			return;
+		
+		cert.setRevoked(true);
+		cert.setRevocationReason(reason);
+		cert.setRevokedAt(LocalDateTime.now());
+		
+		//Maybe disable private key.
+		
+		List<CertificateModel> children = cert.getChildCertificates();
+		for(CertificateModel child: children) {
+			revokeCertificate(child,"Parent certificate: " + cert.getAlias() + " has been revoked.");
+		}
+		
+	}
+	
 }
