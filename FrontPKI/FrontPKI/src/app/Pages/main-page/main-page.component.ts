@@ -32,6 +32,6 @@ export class MainPageComponent {
       })
   }
   logout(){
-    this.authService.logout;
+    this.authService.logout();
   }
 }

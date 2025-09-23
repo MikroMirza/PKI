@@ -40,7 +40,7 @@ public class VerificationService {
 
         tokenRepo.save(verificationToken);
 
-        String verificationUrl = "http://localhost:4200/authentication/verification?token=" + token;
+        String verificationUrl = "https://localhost:4200/authentication/verification?token=" + token;
 //        String verificationUrl = "http://192.168.2.8:8080/api/verify?token=" + token;
 
         SimpleMailMessage message = new SimpleMailMessage();

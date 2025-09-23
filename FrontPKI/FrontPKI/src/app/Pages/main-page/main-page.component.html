@@ -10,7 +10,7 @@
     <button *ngIf="role === 'ADMIN' || role === 'CA'" [routerLink]="['/certificates/ca/new']">
       Create CA certificate
     </button>
-    <button (click)="logout()">Logout</button>
+    <button (click)="logout()" [routerLink]="['']">Logout</button>
   </div>
 
   <div class="table-container">
