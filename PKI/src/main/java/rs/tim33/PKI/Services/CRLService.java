@@ -41,7 +41,7 @@ public class CRLService {
         JcaX509v2CRLBuilder crlBuilder = new JcaX509v2CRLBuilder(issuerX500, now);
         crlBuilder.setNextUpdate(nextUpdate);
 
-        for (CertificateModel revoked : certRepo.findByIssuerAndRevokedTrue(issuerCert)) {
+        for (CertificateModel revoked : certRepo.findByParentCertificateAndRevokedTrue(issuerCert)) {
         	crlBuilder.addCRLEntry(
         		    new BigInteger(revoked.getSerialNumber()),
         		    Date.from(revoked.getRevokedAt().atZone(ZoneId.systemDefault()).toInstant()),

@@ -28,7 +28,6 @@ public class ApplicationStartup {
 	@EventListener(ApplicationReadyEvent.class)
 	public void onAppReady() throws Exception {
 		try {
-			certService.createSelfSigned("CN=Root, O=Smekeri", 180);
 			UserModel admin = new UserModel();
 			admin.setEmail("admin@example.com");
 			admin.setName("Mirko");
@@ -37,7 +36,7 @@ public class ApplicationStartup {
 			admin.setRole(Role.ADMIN);
 			admin.setVerified(true);
 			userRepo.save(admin);
-		} catch (CertificateException | CertIOException | OperatorCreationException | NoSuchAlgorithmException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

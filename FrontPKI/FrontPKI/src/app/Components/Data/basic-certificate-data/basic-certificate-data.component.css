@@ -1,0 +1,25 @@
+:host{
+    display: flex;
+    flex-direction: column;
+}
+
+span.section-title{
+    align-self: center;
+    font-weight: bolder;
+}
+
+div.attr-value{
+    align-self: stretch;
+    display: flex;
+    justify-content: space-between;
+    font-style: italic;
+    gap: 20px;
+}
+
+span.attr{
+    font-weight: bold;
+}
+
+span.value{
+    font-weight: normal;
+}

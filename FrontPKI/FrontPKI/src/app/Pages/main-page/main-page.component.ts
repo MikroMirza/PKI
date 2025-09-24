@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
 import { CertificateService } from '../../Services/certificate.service';
-import { CertificateTableComponent } from "../../Components/certificate-table/certificate-table.component";
+import { CertificateTableComponent } from "../../Components/Data/certificate-table/certificate-table.component";
 
 @Component({
   selector: 'app-main-page',

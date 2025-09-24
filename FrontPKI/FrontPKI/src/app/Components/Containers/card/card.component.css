@@ -1,0 +1,12 @@
+:host{
+    display: inline-block;
+}
+
+.card-div {
+    width: fit-content;
+    height: fit-content;
+    border-radius: 30px;
+    padding: 14px;
+    background: #ffffff;
+    box-shadow: 0px 0px 15px #5a5a5a;
+}

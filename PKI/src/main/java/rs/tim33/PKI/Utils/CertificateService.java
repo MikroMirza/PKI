@@ -8,6 +8,7 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.sql.Date;
@@ -24,21 +25,28 @@ import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.CRLDistPoint;
 import org.bouncycastle.asn1.x509.DistributionPoint;
 import org.bouncycastle.asn1.x509.DistributionPointName;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
+import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
 import rs.tim33.PKI.Models.CertificateModel;
 import rs.tim33.PKI.Models.Role;
 import rs.tim33.PKI.Models.UserModel;
@@ -82,49 +90,13 @@ public class CertificateService {
 		return privateKey;
 	}
 	
-	public KeyPairAndCert createSelfSigned(String dn, int daysValid) throws Exception {
-		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        keyGen.initialize(2048);
-        KeyPair keyPair = keyGen.generateKeyPair();
-
-        long now = System.currentTimeMillis();
-        Date startDate = new Date(now);
-        Date endDate = new Date(now + daysValid * 24L * 60 * 60 * 1000);
-
-        X500Name issuer = new X500Name(dn);
-        BigInteger serial = BigInteger.valueOf(now);
-
-        JcaX509v3CertificateBuilder certBuilder =
-                new JcaX509v3CertificateBuilder(
-                        issuer, serial, startDate, endDate, issuer, keyPair.getPublic());
-
-        //CA=true so the org can create new certificates
-        certBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
-
-        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
-        X509Certificate cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
-        
-        //TODO ENCRYPT STUFF
-        CertificateModel certModel = new CertificateModel(cert, null, "Root");
-        byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias("Root")).getEncoded();
-        byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
-        certModel.setEncryptedPrivateKey(encryptedPrivateKey);
-        
-        certRepo.save(certModel);
-        
-        return new KeyPairAndCert(keyPair, cert);
-	}
-	
-	public KeyPairAndCert createCertificate(
-			Long parentCertId,
+	private void validateGeneralData(
 			String cn,
 			String org,
 			String orgUnit,
 			LocalDateTime notBefore,
-			LocalDateTime notAfter,
-			int pathLenConstraint,
-			boolean isEndEntity
-			) throws AuthenticationException, InvalidCertificateRequestException, InvalidIssuerException, AccessDeniedException {
+			LocalDateTime notAfter
+			) throws AuthenticationException, InvalidCertificateRequestException {
 		UserModel user = loggedUserUtils.getLoggedInUser();
 		if(user == null)
 			throw new AuthenticationException();
@@ -142,17 +114,24 @@ public class CertificateService {
 			
 		if(notBefore.isAfter(notAfter))
 			throw new InvalidCertificateRequestException("NotBefore must be before NotAfter");	
+	}
+	
+	private void validateNonSelfIssuedCertData(
+			Long issuerId,
+			String cn,
+			String org,
+			String orgUnit,
+			LocalDateTime notBefore,
+			LocalDateTime notAfter
+			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException {
+		validateGeneralData(cn, org, orgUnit, notBefore, notAfter);
 		
-		
-		CertificateModel parentCert = certRepo.findById(parentCertId).orElse(null);
-		
-		if (parentCert.isRevoked()) {
-		    throw new InvalidIssuerException("Cannot issue a certificate: the parent certificate has been revoked.");
-		}
+		CertificateModel parentCert = certRepo.findById(issuerId).orElse(null);
 
-		
 		if(parentCert == null)
 			throw new InvalidCertificateRequestException("Nonexistent issuer certificate");
+		if (parentCert.isRevoked())
+		    throw new InvalidIssuerException("Cannot issue a certificate: the parent certificate has been revoked.");
 		if(notBefore.isBefore(parentCert.getNotBefore()))
 			throw new InvalidCertificateRequestException("New certificate can't start before the issuing certificate");
 		if(notAfter.isAfter(parentCert.getNotAfter()))
@@ -160,41 +139,140 @@ public class CertificateService {
 		//If the issuing certificate has expired
 		if(parentCert.getNotAfter().isBefore(LocalDateTime.now()))
 			throw new InvalidIssuerException("The issuing certificate has expired");
-			
-	
-		//Check path len
-		try {
-			if(!isEndEntity && pathLenConstraint >= parentCert.GetPathLenConstraint())
-				throw new InvalidIssuerException("Path len MUST be smaller than the issuing certificate path len");
-			if(parentCert.GetPathLenConstraint() == -1)
-				throw new InvalidIssuerException("Issuing certificate can't be an end-entity certificate");
-		} catch (InvalidIssuerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw e;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new InvalidCertificateRequestException("");
-		}
 		
 		//Check CA user stuff
+		UserModel user = loggedUserUtils.getLoggedInUser();
+		
 		if(user.getRole() == Role.CA) {
-			if(!org.equals(user.getOrganization()))
-				throw new AccessDeniedException("CA Users can only issue certificates for their organization");
-			
-			if(!parentCert.getOrganization().equals(user.getOrganization()))
+			if(!user.getCACerts().contains(parentCert.getRootCertificate()))
 				throw new AccessDeniedException("CA Users can only issue certificates for their organization");
 		}
+	}
+	
+	private void validateIntermediateCertData(
+			Long issuerId,
+			String cn,
+			String org,
+			String orgUnit,
+			LocalDateTime notBefore,
+			LocalDateTime notAfter,
+			int pathLenConstraint
+			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException {
+		validateNonSelfIssuedCertData(issuerId, cn, org, orgUnit, notBefore, notAfter);
 		
-		//Check CA certificate stuff
-		if(!isEndEntity) {
-			if (pathLenConstraint < 0)
-				throw new InvalidCertificateRequestException("Path len can't be negative");
-			
-			if (user.getRole() != Role.ADMIN && user.getRole() != Role.CA)
-				throw new AccessDeniedException("Only CA users can issue CA certificates");
+		if (pathLenConstraint < 0)
+			throw new InvalidCertificateRequestException("Path len can't be negative");
+
+		UserModel user = loggedUserUtils.getLoggedInUser();
+		if (user.getRole() != Role.ADMIN && user.getRole() != Role.CA)
+			throw new AccessDeniedException("Only Admins and CA users can issue intermediate certificates");
+	}
+	
+	private void validateEndEntityCertData(
+			Long issuerId,
+			String cn,
+			String org,
+			String orgUnit,
+			LocalDateTime notBefore,
+			LocalDateTime notAfter
+			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException {
+		validateNonSelfIssuedCertData(issuerId, cn, org, orgUnit, notBefore, notAfter);
+		
+	}
+	
+	public KeyPairAndCert createSelfSigned(
+			String cn,
+			String org,
+			String orgUnit,
+			LocalDateTime notBefore,
+			LocalDateTime notAfter
+			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException, CertificateGenerationException {
+		validateGeneralData(cn, org, orgUnit, notBefore, notAfter);
+		if(loggedUserUtils.getLoggedInRole() != Role.ADMIN)
+			throw new AccessDeniedException("Only admins can create CA certificates");
+		
+		KeyPairGenerator keyGen;
+		try {
+			keyGen = KeyPairGenerator.getInstance("RSA");
+		} catch (NoSuchAlgorithmException e) {
+			throw new CertificateGenerationException("Invalid key algorithm name");
 		}
+        keyGen.initialize(2048);
+        KeyPair keyPair = keyGen.generateKeyPair();
+
+        long now = System.currentTimeMillis();
+
+        String issuerDn = "CN=" + cn + ", O=" + org + ", OU=" + orgUnit;
+        X500Name issuer = new X500Name(issuerDn);
+        BigInteger serial = BigInteger.valueOf(now);
+
+        JcaX509v3CertificateBuilder certBuilder =
+                new JcaX509v3CertificateBuilder(
+                        issuer,
+                        serial, 
+                        Date.from(notBefore.atZone(ZoneId.systemDefault()).toInstant()),
+                        Date.from(notAfter.atZone(ZoneId.systemDefault()).toInstant()),
+                        issuer,
+                        keyPair.getPublic());
+
+        try {
+			certBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
+		} catch (CertIOException e) {
+			throw new CertificateGenerationException("Error adding basic constraint");
+		}
+
+        ContentSigner signer;
+        X509Certificate cert;
+		try {
+			signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
+			cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
+		} catch (CertificateException | OperatorCreationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CertificateGenerationException("Error signing certificate");
+		}
+        
+        //TODO ENCRYPT STUFF
+        CertificateModel certModel = new CertificateModel(cert, null, issuerDn);
+		try {
+			byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(certModel.getAlias())).getEncoded();
+	        byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
+	        certModel.setEncryptedPrivateKey(encryptedPrivateKey);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new CertificateGenerationException("Error encrypting private key");
+		}
+        
+        certRepo.save(certModel);
+        
+        return new KeyPairAndCert(keyPair, cert);
+	}
+	
+	public int generateKeyUsageBits(Iterable<String> keys) {
+		int bits = 0;
+		for(String s : keys)
+			switch(s) {
+			case "digitalSignature": bits |= KeyUsage.digitalSignature; break;
+			case "nonRepudiation": bits |= KeyUsage.nonRepudiation; break;
+			case "keyEncipherment": bits |= KeyUsage.keyEncipherment; break;
+			case "dataEncipherment": bits |= KeyUsage.dataEncipherment; break;
+			case "keyAgreement": bits |= KeyUsage.keyAgreement; break;
+			case "keyCertSign": bits |= KeyUsage.keyCertSign; break;
+			case "cRLSign": bits |= KeyUsage.cRLSign; break;
+			case "encipherOnly": bits |= KeyUsage.encipherOnly; break;
+			case "decipherOnly": bits |= KeyUsage.decipherOnly; break;
+			}
+		return bits;
+	}
+	
+	public KeyPairAndCert generateCertificate(CreateCertificateDTO data)
+			throws AuthenticationException, InvalidCertificateRequestException, InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
+		if(data.isEndEntity)
+			validateEndEntityCertData(data.issuerId, data.subject.commonName, data.subject.organization, data.subject.orgUnit, data.notBefore, data.notAfter);
+		else
+			validateIntermediateCertData(data.issuerId, data.subject.commonName, data.subject.organization, data.subject.orgUnit, data.notBefore, data.notAfter, data.pathLenConstraint);
 		
+		//Generate keys
 		KeyPairGenerator keyGen;
 		try {
 			keyGen = KeyPairGenerator.getInstance("RSA");
@@ -205,27 +283,106 @@ public class CertificateService {
         keyGen.initialize(2048);
         KeyPair keyPair = keyGen.generateKeyPair();
         
-        X500Name subject = new X500Name("CN=" + cn + ", O=" + org + ", OU=" + orgUnit);
-        X500Name issuer = new X500Name(parentCert.getSubjectDn());
+        //Create certificate builder
+		CertificateModel parentCert = certRepo.findById(data.issuerId).orElse(null);
+		
+		String subjectDn = "";
+		if(!data.subject.commonName.isBlank()) subjectDn += "CN=" + data.subject.commonName;
+		if(!data.subject.organization.isBlank()) subjectDn += ", O=" + data.subject.organization;
+		if(!data.subject.orgUnit.isBlank()) subjectDn += ", OU=" + data.subject.orgUnit;
+		if(!data.subject.country.isBlank()) subjectDn += ", C=" + data.subject.country;
+		if(!data.subject.state.isBlank()) subjectDn += ", S=" + data.subject.state;
+		if(!data.subject.locality.isBlank()) subjectDn += ", L=" + data.subject.locality;
+		X500Name subject = new X500Name(subjectDn);
+        X500Name issuer;
+        if(parentCert != null) issuer = new X500Name(parentCert.getSubjectDn());
+        else issuer = new X500Name(subjectDn);
         BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
         
         JcaX509v3CertificateBuilder certBuilder =
                 new JcaX509v3CertificateBuilder(
                         issuer,
                         serial,
-                        Date.from(notBefore.atZone(ZoneId.systemDefault()).toInstant()),
-                        Date.from(notAfter.atZone(ZoneId.systemDefault()).toInstant()),
+                        Date.from(data.notBefore.atZone(ZoneId.systemDefault()).toInstant()),
+                        Date.from(data.notAfter.atZone(ZoneId.systemDefault()).toInstant()),
                         subject,
                         keyPair.getPublic());
 		
-        BasicConstraints constraint;
-        if(isEndEntity)
-        	constraint = new BasicConstraints(false);
-        else
-        	constraint = new BasicConstraints(pathLenConstraint);
         
+        
+        //Extensions
+        //Subject and Auth keys
+        try {
+            JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+			certBuilder.addExtension(Extension.subjectKeyIdentifier, false, 
+					extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
+			if(parentCert != null)
+				certBuilder.addExtension(Extension.authorityKeyIdentifier, false,
+						extUtils.createAuthorityKeyIdentifier(parentCert.getCertificate()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new CertificateGenerationException("Error adding key id extensions");
+		}
+        
+        //BasicConstraint
+        BasicConstraints constraint;
+        if(data.isEndEntity) constraint = new BasicConstraints(false);
+        else if (parentCert == null) constraint = new BasicConstraints(true);
+        else constraint = new BasicConstraints(data.pathLenConstraint);
         try {
 			certBuilder.addExtension(Extension.basicConstraints, true, constraint);
+		} catch (CertIOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new CertificateGenerationException("Error adding basic constraint");
+		}
+        
+        //SAN
+        GeneralName[] sanArray = data.san.stream().map(entry -> {
+            int type;
+            switch (entry.type.toLowerCase()) {
+                case "dns": type = GeneralName.dNSName; break;
+                case "email": type = GeneralName.rfc822Name; break;
+                case "ip": type = GeneralName.iPAddress; break;
+                case "uri": type = GeneralName.uniformResourceIdentifier; break;
+                default: throw new CertificateGenerationException("Unsupported SAN type: " + entry.value);
+            }
+            return new GeneralName(type, entry.value);
+        }).toArray(GeneralName[]::new);
+        try {
+			certBuilder.addExtension(Extension.subjectAlternativeName, false, new GeneralNames(sanArray));
+		} catch (CertIOException e) {
+			e.printStackTrace();
+			throw new CertificateGenerationException("Error adding SAN constraint");
+		}
+        
+        //KeyUsage
+        int keyUsageBits = generateKeyUsageBits(data.keyUsage);
+        try {
+			certBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(keyUsageBits));
+		} catch (CertIOException e) {
+			e.printStackTrace();
+			throw new CertificateGenerationException("Error adding keyusage constraint");
+		}
+        
+        //ExtendedKeyUsage
+        if (data.extendedKeyUsage != null) {
+            List<KeyPurposeId> ekuList = new ArrayList<>();
+            for (String eku : data.extendedKeyUsage) {
+                if ("serverAuth".equals(eku)) ekuList.add(KeyPurposeId.id_kp_serverAuth);
+                if ("clientAuth".equals(eku)) ekuList.add(KeyPurposeId.id_kp_clientAuth);
+            }
+            try {
+				certBuilder.addExtension(Extension.extendedKeyUsage, false,
+				        new ExtendedKeyUsage(ekuList.toArray(new KeyPurposeId[0])));
+			} catch (CertIOException e) {
+				e.printStackTrace();
+				throw new CertificateGenerationException("Error adding EKU constraint");
+			}
+        }
+        
+        
+        try {
 			//!!!!! MIGHT BE WRONG
 			certBuilder.addExtension(
 				    Extension.cRLDistributionPoints,
@@ -235,7 +392,7 @@ public class CertificateService {
 				            new DistributionPointName(
 				                new GeneralNames(
 				                    new GeneralName(GeneralName.uniformResourceIdentifier,
-				                        "http://localhost:8080/crl/" + parentCertId + ".crl"))),
+				                        "https://localhost:8443/crl/" + data.issuerId + ".crl"))),
 				            null,
 				            null)
 				    })
@@ -244,22 +401,24 @@ public class CertificateService {
 			
 		} catch (CertIOException e) {
 			e.printStackTrace();
-			throw new CertificateGenerationException("Error setting certificate basic constraints");
+			throw new CertificateGenerationException("Error setting certificate crld constraints");
 		}
         
         X509Certificate cert;
         //Create certificate
         try {
-            ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(getPrivateKeyOfCert(parentCertId));
+            ContentSigner signer;
+            if(parentCert != null) signer = new JcaContentSignerBuilder("SHA256withRSA").build(getPrivateKeyOfCert(data.issuerId));
+            else signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
             cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
         } catch (Exception e) {
 			throw new CertificateGenerationException("Error signing certificate");
 		}
         
         //Persist it in the database
-        CertificateModel certModel = new CertificateModel(cert, parentCert, org);
+        CertificateModel certModel = new CertificateModel(cert, parentCert, parentCert.getAlias());
         try {
-            byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(org)).getEncoded();
+            byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(certModel.getAlias())).getEncoded();
             byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
             certModel.setEncryptedPrivateKey(encryptedPrivateKey);
         } catch (Exception e) {
@@ -274,9 +433,12 @@ public class CertificateService {
 	public List<CertificateModel> getAllCertificates() {
 		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
 			return certRepo.findAll();
-		if(loggedUserUtils.getLoggedInRole() == Role.CA)
-			return certRepo.findByOrganization(loggedUserUtils.getLoggedInOrganization());
-		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
+		if(loggedUserUtils.getLoggedInRole() == Role.CA) {
+			UserModel user = loggedUserUtils.getLoggedInUser();
+			return certRepo.findAll().stream().filter(cert -> user.getCACerts().contains(cert.getRootCertificate())).toList();
+		}
+		//TODO
+		if(loggedUserUtils.getLoggedInRole() == Role.USER)
 			return certRepo.findAll()
 					.stream()
 					.filter(t -> {return (t.getOwnerUser() != null && t.getOwnerUser().getEmail().equals(loggedUserUtils.getLoggedInUser().getEmail()));}).toList();

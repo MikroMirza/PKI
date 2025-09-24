@@ -7,8 +7,8 @@
     <button *ngIf="role === 'ADMIN'" [routerLink]="['/users/ca/new']">
       Create CA user
     </button>
-    <button *ngIf="role === 'ADMIN' || role === 'CA'" [routerLink]="['/certificates/ca/new']">
-      Create CA certificate
+    <button *ngIf="role == 'ADMIN' || role == 'CA'" [routerLink]="['/create-certificate']">
+      Create certificate
     </button>
     <button (click)="logout()" [routerLink]="['']">Logout</button>
   </div>

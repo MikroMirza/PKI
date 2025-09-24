@@ -1,0 +1,82 @@
+<form [formGroup]="certificateForm" (ngSubmit)="submit()">
+  <h2>Certificate Data</h2>
+
+  <label>Issuer ID:
+    <input type="number" formControlName="issuerId" />
+  </label>
+
+  <fieldset formGroupName="subject">
+    <legend>Subject</legend>
+    <label>Common Name:
+      <input formControlName="commonName" />
+    </label>
+    <label>Organization:
+      <input formControlName="organization" />
+    </label>
+    <label>Organizational Unit:
+      <input formControlName="orgUnit" />
+    </label>
+    <label>Country:
+      <input formControlName="country" maxlength="2" />
+    </label>
+    <label>State:
+      <input formControlName="state" />
+    </label>
+    <label>Locality:
+      <input formControlName="locality" />
+    </label>
+  </fieldset>
+
+  <label>Valid From:
+    <input type="date" formControlName="notBefore" />
+  </label>
+  <label>Valid To:
+    <input type="date" formControlName="notAfter" />
+  </label>
+
+  <h3>Extensions</h3>
+
+  <div formArrayName="san">
+    <h4>Subject Alternative Names</h4>
+    <button type="button" (click)="addSan()">+ Add SAN</button>
+    <div *ngFor="let sanGroup of san.controls; let i = index" [formGroupName]="i">
+      <select formControlName="type">
+        <option value="DNS">DNS</option>
+        <option value="IP">IP</option>
+        <option value="EMAIL">EMAIL</option>
+        <option value="URI">URI</option>
+      </select>
+      <input formControlName="value" placeholder="example.com or 192.168.1.1" />
+      <button type="button" (click)="removeSan(i)">Remove</button>
+    </div>
+  </div>
+
+  <div formArrayName="keyUsage">
+    <h4>Key Usage</h4>
+    <button type="button" (click)="addKeyUsage()">+ Add KeyUsage</button>
+    <div *ngFor="let ctrl of keyUsage.controls; let i = index">
+      <input [formControlName]="i" placeholder="digitalSignature, keyEncipherment..." />
+      <button type="button" (click)="removeKeyUsage(i)">Remove</button>
+    </div>
+  </div>
+
+  <!-- Extended Key Usage -->
+  <div formArrayName="extendedKeyUsage">
+    <h4>Extended Key Usage</h4>
+    <button type="button" (click)="addExtendedKeyUsage()">+ Add ExtendedKeyUsage</button>
+    <div *ngFor="let ctrl of extendedKeyUsage.controls; let i = index">
+      <input [formControlName]="i" placeholder="serverAuth, clientAuth..." />
+      <button type="button" (click)="removeExtendedKeyUsage(i)">Remove</button>
+    </div>
+  </div>
+
+  <!-- Basic Constraints -->
+  <label>
+    <input type="checkbox" formControlName="isEndEntity" /> Is End Entity
+  </label>
+  <label>Path Length Constraint:
+    <input type="number" formControlName="pathLenConstraint" />
+  </label>
+
+  <button>Create Certificate</button>
+</form>

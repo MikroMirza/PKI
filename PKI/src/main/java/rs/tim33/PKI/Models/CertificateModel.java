@@ -64,12 +64,15 @@ public class CertificateModel {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_certificate_id")
     private CertificateModel parentCertificate;
+    @ManyToOne
+    private CertificateModel rootCertificate;
     
     @OneToMany(mappedBy = "parentCertificate")
     private List<CertificateModel> childCertificates;
     
     @ManyToOne
     private UserModel ownerUser;
+    
     
     public CertificateModel() {}
     
@@ -80,6 +83,11 @@ public class CertificateModel {
         setSerialNumber(cert.getSerialNumber().toString());
         
         setParentCertificate(parent);
+        if(parent != null)
+        	setRootCertificate(parent.getRootCertificate());
+        else
+        	setRootCertificate(this);
+        
 		setNotBefore(LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault()));
 		setNotAfter(LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
 
@@ -98,6 +106,21 @@ public class CertificateModel {
         setPublicKey(cert.getPublicKey().getEncoded());
     }
     
+    public X509Certificate getCertificate() throws Exception {
+    	CertificateFactory cf;
+		try {
+			cf = CertificateFactory.getInstance("X.509");
+	    	X509Certificate decodedCert = (X509Certificate) cf.generateCertificate(
+	    	        new ByteArrayInputStream(this.certData)
+	    	        );
+	    	
+	    	return decodedCert;
+		} catch (CertificateException e) {
+			e.printStackTrace();
+			throw new Exception();
+		}
+    }
+    
     public int GetPathLenConstraint() throws Exception {
     	CertificateFactory cf;
 		try {
@@ -111,6 +134,5 @@ public class CertificateModel {
 			e.printStackTrace();
 			throw new Exception();
 		}
-    	
     }
 }
