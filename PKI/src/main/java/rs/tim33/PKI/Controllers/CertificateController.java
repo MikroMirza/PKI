@@ -1,6 +1,7 @@
 package rs.tim33.PKI.Controllers;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.security.sasl.AuthenticationException;
 
@@ -15,18 +16,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
+import rs.tim33.PKI.DTO.Certificate.RevokedCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.SimpleCertificateDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
 import rs.tim33.PKI.Exceptions.ErrorMessage;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
+import rs.tim33.PKI.Models.CertificateModel;
+import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Utils.CertificateService;
+import rs.tim33.PKI.Utils.RevocationReason;
 
 @RestController
 @RequestMapping("/api/certificates")
 public class CertificateController {
 	@Autowired
 	private CertificateService certService;
+	@Autowired
+	private CertificateRepository certRepo;
 	
 	@PostMapping
 	public ResponseEntity<?> create(@RequestBody CreateCertificateDTO data){
@@ -45,6 +52,18 @@ public class CertificateController {
 		}
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}
+	
+	@PostMapping("/revoked")
+    public ResponseEntity<?> revokeCertificate(@RequestBody RevokedCertificateDTO certDTO){
+    	Optional<CertificateModel> optCert = certRepo.findById(certDTO.getCertId());
+		if(optCert.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage("You must select a certificate to revoke first", "NO_CERT_SELECTED"));
+		}
+		CertificateModel cert = optCert.get();
+		RevocationReason reason = RevocationReason.fromCode(certDTO.getReason());
+		certService.revokeCertificate(cert, reason);
+		return ResponseEntity.ok().build();
+    }
 	
 	@GetMapping
 	public ResponseEntity<List<SimpleCertificateDTO>> getCertificates(){

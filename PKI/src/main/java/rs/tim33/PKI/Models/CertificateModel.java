@@ -26,6 +26,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
+import rs.tim33.PKI.Utils.RevocationReason;
 
 @Entity
 @Getter
@@ -58,7 +59,16 @@ public class CertificateModel {
 
     //Revoke stuff
     private boolean revoked = false;
-    private String revocationReason;
+    @Column(name = "revocation_reason")
+    private Integer  revocationReason;
+    public RevocationReason getRevocationReason() {
+        return revocationReason == null ? null : RevocationReason.fromCode(revocationReason);
+    }
+
+    public void setRevocationReason(RevocationReason reason) {
+        this.revocationReason = reason != null ? reason.getCode() : null;
+    }
+    
     private LocalDateTime revokedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)

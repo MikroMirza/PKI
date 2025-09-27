@@ -4,6 +4,7 @@ import { SimpleCertificateDTO } from '../DTO/Certificate/SimpleCertificateDTO';
 import { Observable } from 'rxjs';
 import { environment } from '../env/environment';
 import { CreateCertificateDTO } from '../DTO/Certificate/CreateCertificateDTO';
+import { RevokedCertificateDTO } from '../DTO/Certificate/RevokedCertificateDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -22,5 +23,9 @@ export class CertificateService {
 
   createNonCA(data: CreateCertificateDTO){
     return this.http.post(`${environment.apiHost}/api/certificates/non-ca`, data);
+  }
+
+  revokeCertificate(data:RevokedCertificateDTO){
+    return this.http.post(`${environment.apiHost}/api/certificates/revoked`,data)
   }
 }
