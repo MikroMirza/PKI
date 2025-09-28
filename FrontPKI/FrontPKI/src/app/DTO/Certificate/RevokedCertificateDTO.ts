@@ -1,4 +1,4 @@
 export class RevokedCertificateDTO {
-	private certId:number=0;
-	private reaspm:string="";
+	public certId:number=0;
+	public reason:number=0;
 }

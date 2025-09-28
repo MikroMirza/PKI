@@ -11,6 +11,13 @@
       Create certificate
     </button>
     <button (click)="logout()" [routerLink]="['']">Logout</button>
+    <div class="button-row">
+      <button *ngIf="role === 'ADMIN' || role === 'CA'" 
+              [disabled]="!selectedCert"
+              (click)="openRevokeDialog()">
+        Revoke Certificate
+      </button>
+    </div>
   </div>
 
   <div class="table-container">

@@ -1,7 +1,7 @@
 <div class="cert-container">
-    <app-card *ngFor="let cert of certData"
-        (click)="certSelected(cert)"
-        [selected] = "selectedCert === cert">
-        <app-basic-certificate-data [certData]="cert"/>
-    </app-card>
+  <app-card *ngFor="let cert of certData"
+            (click)="selectRow(cert)"
+            [selected]="selectedCert === cert">
+    <app-basic-certificate-data [certData]="cert"/>
+  </app-card>
 </div>

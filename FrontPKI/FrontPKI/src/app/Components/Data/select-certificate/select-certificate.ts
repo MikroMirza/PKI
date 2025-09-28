@@ -1,4 +1,4 @@
-import { Component, Input, output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, output } from '@angular/core';
 import { CardComponent } from "../../Containers/card/card.component";
 import { BasicCertificateDataComponent } from "../basic-certificate-data/basic-certificate-data.component";
 import { SimpleCertificateDTO } from '../../../DTO/Certificate/SimpleCertificateDTO';
@@ -12,7 +12,7 @@ import { CertificateTableComponent } from "../certificate-table/certificate-tabl
 })
 export class SelectCertificate {
   @Input() certData: SimpleCertificateDTO[] = [];
-  onCertSelected = output<SimpleCertificateDTO>();
+  @Output() onCertSelected = new EventEmitter<SimpleCertificateDTO>();
 
   emitCert(c: SimpleCertificateDTO){
     this.onCertSelected.emit(c);

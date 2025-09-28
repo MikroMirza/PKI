@@ -1,0 +1,18 @@
+<div class="revoke-dialog" (click)="$event.stopPropagation()">
+  <h2 class="dialog-title">Revoke Certificate</h2>
+
+  <div class="options">
+    <div class="option-card"
+         *ngFor="let option of reasonOptions; let i = index"
+         [class.selected]="selectedOptionIndex === i"
+         (click)="selectOption(i)">
+      <div class="option-title">{{ option.label }}</div>
+      <div class="option-explanation">{{ option.description }}</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button mat-button (click)="onCancel()" class="cancel-btn">Cancel</button>
+    <button mat-button (click)="onConfirm()" class="confirm-btn">Revoke</button>
+  </div>
+</div>

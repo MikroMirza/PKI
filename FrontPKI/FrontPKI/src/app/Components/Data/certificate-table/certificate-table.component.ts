@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { SimpleCertificateDTO } from '../../../DTO/Certificate/SimpleCertificateDTO';
 import { CardComponent } from "../../Containers/card/card.component";
 import { BasicCertificateDataComponent } from "../basic-certificate-data/basic-certificate-data.component";
@@ -9,16 +9,16 @@ import { BasicCertificateDataComponent } from "../basic-certificate-data/basic-c
   standalone: true,
   imports: [CommonModule, CardComponent, BasicCertificateDataComponent],
   templateUrl: './certificate-table.component.html',
-  styleUrl: './certificate-table.component.css'
+  styleUrls: ['./certificate-table.component.css']
 })
 export class CertificateTableComponent {
   @Input() certData: SimpleCertificateDTO[] = [];
-  certClicked = output<SimpleCertificateDTO>();
+  @Output() certSelected = new EventEmitter<SimpleCertificateDTO>();
+
   selectedCert?: SimpleCertificateDTO;
 
-
-  certSelected(c: SimpleCertificateDTO){
-    this.selectedCert = c;
-    this.certClicked.emit(c);
+  selectRow(cert: SimpleCertificateDTO) {
+    this.selectedCert = cert;
+    this.certSelected.emit(cert);
   }
 }

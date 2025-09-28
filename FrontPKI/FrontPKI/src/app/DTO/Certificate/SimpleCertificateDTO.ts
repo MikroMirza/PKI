@@ -11,4 +11,7 @@ export class SimpleCertificateDTO{
     notAfter: string = "";
 	isEndEntity: boolean = false;
 	pathLen: number = -1;
+
+	isRevoked: boolean = false;
+    children?: SimpleCertificateDTO[];
 }

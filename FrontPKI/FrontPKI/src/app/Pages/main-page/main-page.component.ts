@@ -7,6 +7,8 @@ import { RouterLink } from '@angular/router';
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
 import { CertificateService } from '../../Services/certificate.service';
 import { CertificateTableComponent } from "../../Components/Data/certificate-table/certificate-table.component";
+import { MatDialog } from '@angular/material/dialog';
+import { RevokeDialogComponent } from '../../dialog/revoke-reason-dialog/revoke-reason-dialog';
 
 @Component({
   selector: 'app-main-page',
@@ -20,8 +22,10 @@ export class MainPageComponent {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private certService: CertificateService){}
-  
+    private certService: CertificateService,
+    private dialog:MatDialog){}
+  selectedCert: SimpleCertificateDTO | null = null;
+
   role: String = "";
   certData$!: Observable<SimpleCertificateDTO[]>;
 
@@ -34,4 +38,30 @@ export class MainPageComponent {
   logout(){
     this.authService.logout();
   }
+
+  onSelectCert(cert: SimpleCertificateDTO) {
+    this.selectedCert = cert;
+  }
+  openRevokeDialog() {
+  if (!this.selectedCert) return;
+
+  const dialogRef = this.dialog.open(RevokeDialogComponent, {
+    data: { certId: this.selectedCert.id }
+  });
+
+  dialogRef.afterClosed().subscribe((revoked: boolean) => {
+    if (revoked && this.selectedCert) {
+      this.markRevoked(this.selectedCert);
+    }
+  });
 }
+
+markRevoked(cert: SimpleCertificateDTO) {
+  cert.isRevoked = true;
+  if (cert.children) {
+    cert.children.forEach(child => this.markRevoked(child));
+  }
+}
+
+}
+

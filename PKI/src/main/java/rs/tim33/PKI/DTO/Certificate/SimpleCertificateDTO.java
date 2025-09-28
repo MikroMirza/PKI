@@ -4,6 +4,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -24,6 +25,8 @@ public class SimpleCertificateDTO {
 	public Boolean isEndEntity;
 	public Integer pathLen;
 
+	public Boolean isRevoked;
+	public List<SimpleCertificateDTO> children;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime notBefore;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

@@ -413,4 +413,18 @@ public class CertificateService {
 		//TODO: Save crl to file in generate, and call generate from here - low priority who cares
 	}
 	
+	public void rerevokeCertificate(CertificateModel cert, RevocationReason reason) {
+	    if (cert.isRevoked())
+	        return;
+
+	    cert.setRevoked(true);
+	    cert.setRevocationReason(reason);
+	    cert.setRevokedAt(LocalDateTime.now());
+	    for (CertificateModel child : cert.getChildCertificates()) {
+	        revokeCertificate(child, reason);
+	    }
+		
+		//TODO: Save crl to file in generate, and call generate from here - low priority who cares
+	}
+	
 }

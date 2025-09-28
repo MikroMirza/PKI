@@ -65,6 +65,21 @@ public class CertificateController {
 		return ResponseEntity.ok().build();
     }
 	
+	@PostMapping("/rerevoked")
+    public ResponseEntity<?> rerevokeCertificate(@RequestBody RevokedCertificateDTO certDTO){
+    	Optional<CertificateModel> optCert = certRepo.findById(certDTO.getCertId());
+		if(optCert.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage("You must select a certificate to unrevoke first", "NO_CERT_SELECTED"));
+		}
+		CertificateModel cert = optCert.get();
+		RevocationReason reason = RevocationReason.fromCode(certDTO.getReason());
+		if(reason.getCode()!=6) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage("This certificate can be unrevoked", "INCORRECT_REASONING"));
+		}
+		certService.rerevokeCertificate(cert, reason);
+		return ResponseEntity.ok().build();
+    }
+	
 	@GetMapping
 	public ResponseEntity<List<SimpleCertificateDTO>> getCertificates(){
 		return ResponseEntity.ok(certService.getAllCertificates().stream().map(t -> new SimpleCertificateDTO(t)).toList());
