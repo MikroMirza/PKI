@@ -5,10 +5,15 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import rs.tim33.PKI.Models.CertificateType;
+
 public class CreateCertificateDTO {
 	//The certificate data
+	public CertificateType certType;
 	public Long issuerId;
 	public SubjectDTO subject;
+
+	
 	public LocalDateTime notBefore;
 	public LocalDateTime notAfter;
 	
@@ -23,6 +28,5 @@ public class CreateCertificateDTO {
 	public List<String> extendedKeyUsage;
 	
 	//BasicConstraints
-	public Boolean isEndEntity;
 	public Integer pathLenConstraint;
 }

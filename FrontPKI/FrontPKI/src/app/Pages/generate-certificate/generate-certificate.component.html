@@ -1,82 +1,165 @@
 <form [formGroup]="certificateForm" (ngSubmit)="submit()">
-  <h2>Certificate Data</h2>
+  <h2>Certificate Creation</h2>
+  <mat-form-field appearance="outline">
+    <mat-label>Certificate Type</mat-label>
+    <mat-select formControlName="certType">
+      <mat-option *ngFor="let type of certTypes" [value]="type">
+        {{ type }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 
-  <label>Issuer ID:
-    <input type="number" formControlName="issuerId" />
-  </label>
-
-  <fieldset formGroupName="subject">
-    <legend>Subject</legend>
-    <label>Common Name:
-      <input formControlName="commonName" />
-    </label>
-    <label>Organization:
-      <input formControlName="organization" />
-    </label>
-    <label>Organizational Unit:
-      <input formControlName="orgUnit" />
-    </label>
-    <label>Country:
-      <input formControlName="country" maxlength="2" />
-    </label>
-    <label>State:
-      <input formControlName="state" />
-    </label>
-    <label>Locality:
-      <input formControlName="locality" />
-    </label>
-  </fieldset>
-
-  <label>Valid From:
-    <input type="date" formControlName="notBefore" />
-  </label>
-  <label>Valid To:
-    <input type="date" formControlName="notAfter" />
-  </label>
-
-  <h3>Extensions</h3>
-
-  <div formArrayName="san">
-    <h4>Subject Alternative Names</h4>
-    <button type="button" (click)="addSan()">+ Add SAN</button>
-    <div *ngFor="let sanGroup of san.controls; let i = index" [formGroupName]="i">
-      <select formControlName="type">
-        <option value="DNS">DNS</option>
-        <option value="IP">IP</option>
-        <option value="EMAIL">EMAIL</option>
-        <option value="URI">URI</option>
-      </select>
-      <input formControlName="value" placeholder="example.com or 192.168.1.1" />
-      <button type="button" (click)="removeSan(i)">Remove</button>
-    </div>
+  <!-- Issuer -->
+  <div *ngIf="certificateForm.get('certType')?.value != 'ROOT'">
+    <h4>Available issuers</h4>
+    <app-select-certificate [certData]="(this.certData | async) || []" (onCertSelected)="onCertSelected($event)"></app-select-certificate>
   </div>
 
+  <!-- Subject -->
+  <fieldset formGroupName="subject">
+    <h2>Subject Info</h2>
+    <mat-form-field appearance="outline">
+      <mat-label>Common Name</mat-label>
+      <input matInput formControlName="commonName" />
+      <mat-error *ngIf="certificateForm.get('subject.commonName')?.hasError('required')">
+        Common Name is required.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Organization</mat-label>
+      <input matInput formControlName="organization" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Organizational Unit</mat-label>
+      <input matInput formControlName="orgUnit" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Country</mat-label>
+      <input matInput maxlength="2" formControlName="country" />
+      <mat-error *ngIf="certificateForm.get('subject.country')?.hasError('required')">
+        Country is required.
+      </mat-error>
+      <mat-error *ngIf="certificateForm.get('subject.country')?.hasError('minlength') 
+        || certificateForm.get('subject.country')?.hasError('maxlength')">
+        Must be exactly 2 characters.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>State</mat-label>
+      <input matInput formControlName="state" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Locality</mat-label>
+      <input matInput formControlName="locality" />
+    </mat-form-field>
+  </fieldset>
+
+  <!-- Validity -->
+  <h2>Validity</h2>
+  <mat-form-field appearance="outline">
+    <mat-label>Valid From</mat-label>
+    <input matInput type="datetime-local" formControlName="notBefore" />
+    <mat-error *ngIf="certificateForm.get('notBefore')?.hasError('required')">
+      Valid From date is required.
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Valid To</mat-label>
+    <input matInput type="datetime-local" formControlName="notAfter" />
+    <mat-error *ngIf="certificateForm.get('notAfter')?.hasError('required')">
+      Valid To date is required.
+    </mat-error>
+  </mat-form-field>
+
+  <h2>Extensions</h2>
+
+  <!-- SAN -->
+  <div formArrayName="san">
+    <h4>Subject Alternative Names</h4>
+    <button mat-stroked-button type="button" (click)="addSan()">+ Add SAN</button>
+    <div class="listing">
+      <div *ngFor="let sanGroup of san.controls; let i = index" [formGroupName]="i">
+        <mat-form-field appearance="outline">
+          <mat-label>Type</mat-label>
+          <mat-select formControlName="type">
+            <mat-option value="DNS">DNS</mat-option>
+            <mat-option value="IP">IP</mat-option>
+            <mat-option value="EMAIL">EMAIL</mat-option>
+            <mat-option value="URI">URI</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Value</mat-label>
+          <input matInput formControlName="value" />
+          <mat-error *ngIf="sanGroup.get('value')?.hasError('required')">
+            Value is required.
+          </mat-error>
+        </mat-form-field>
+
+        <button mat-icon-button color="warn" type="button" (click)="removeSan(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+    <mat-error *ngIf="san.invalid && (san.dirty || san.touched)">
+      At least one SAN is required.
+    </mat-error>
+  </div>
+
+  <!-- Key Usage -->
   <div formArrayName="keyUsage">
     <h4>Key Usage</h4>
-    <button type="button" (click)="addKeyUsage()">+ Add KeyUsage</button>
-    <div *ngFor="let ctrl of keyUsage.controls; let i = index">
-      <input [formControlName]="i" placeholder="digitalSignature, keyEncipherment..." />
-      <button type="button" (click)="removeKeyUsage(i)">Remove</button>
+    <button mat-stroked-button type="button" (click)="addKeyUsage()">+ Add KeyUsage</button>
+    <div class="listing">
+      <div *ngFor="let ctrl of keyUsage.controls; let i = index">
+        <mat-form-field appearance="outline">
+          <mat-label>Usage</mat-label>
+          <input matInput [formControlName]="i" placeholder="digitalSignature, keyEncipherment..." />
+          <mat-error *ngIf="ctrl.hasError('required')">
+            KeyUsage cannot be empty.
+          </mat-error>
+        </mat-form-field>
+        <button mat-icon-button color="warn" type="button" (click)="removeKeyUsage(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
     </div>
+    
+    <mat-error *ngIf="keyUsage.invalid && (keyUsage.dirty || keyUsage.touched)">
+      At least one KeyUsage is required.
+    </mat-error>
   </div>
 
   <!-- Extended Key Usage -->
   <div formArrayName="extendedKeyUsage">
     <h4>Extended Key Usage</h4>
-    <button type="button" (click)="addExtendedKeyUsage()">+ Add ExtendedKeyUsage</button>
+    <button mat-stroked-button type="button" (click)="addExtendedKeyUsage()">+ Add ExtendedKeyUsage</button>
     <div *ngFor="let ctrl of extendedKeyUsage.controls; let i = index">
-      <input [formControlName]="i" placeholder="serverAuth, clientAuth..." />
-      <button type="button" (click)="removeExtendedKeyUsage(i)">Remove</button>
+      <mat-form-field appearance="outline">
+        <mat-label>Extended Usage</mat-label>
+        <input matInput [formControlName]="i" placeholder="serverAuth, clientAuth..." />
+      </mat-form-field>
+      <button mat-icon-button color="warn" type="button" (click)="removeExtendedKeyUsage(i)">
+        <mat-icon>delete</mat-icon>
+      </button>
     </div>
   </div>
 
   <!-- Basic Constraints -->
-  <label>
-    <input type="checkbox" formControlName="isEndEntity" /> Is End Entity
-  </label>
-  <label>Path Length Constraint:
-    <input type="number" formControlName="pathLenConstraint" />
-  </label>
+  <h4 *ngIf="certificateForm.get('certType')?.value != 'END_ENTITY'">Basic Constraint</h4>
+  <mat-form-field appearance="outline" *ngIf="certificateForm.get('certType')?.value != 'END_ENTITY'">
+    <mat-label>Path Length Constraint</mat-label>
+    <input matInput type="number" formControlName="pathLenConstraint" />
+  </mat-form-field>
 
-  <button>Create Certificate</button>
+  <h4 style="color: red;">{{errorMessage}}</h4>
+  <h4 style="color: blue">{{successMessage}}</h4>
+  <button mat-raised-button color="primary">Create Certificate</button>
 </form>

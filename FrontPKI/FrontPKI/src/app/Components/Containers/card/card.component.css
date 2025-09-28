@@ -10,3 +10,7 @@
     background: #ffffff;
     box-shadow: 0px 0px 15px #5a5a5a;
 }
+
+.card-div.selected {
+    box-shadow: 0px 0px 15px #0ac6ff;
+}

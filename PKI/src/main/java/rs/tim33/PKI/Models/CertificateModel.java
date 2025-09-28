@@ -76,8 +76,11 @@ public class CertificateModel {
     
     public CertificateModel() {}
     
-    public CertificateModel(X509Certificate cert, CertificateModel parent, String keyAlias) {
-        setAlias(keyAlias);
+    public CertificateModel(X509Certificate cert, CertificateModel parent) {
+        if(parent != null)
+        	setAlias(parent.getAlias());
+        else
+        	setAlias(cert.getSubjectX500Principal().getName());
         setSubjectDn(cert.getSubjectX500Principal().getName());
         setIssuerDn(cert.getIssuerX500Principal().getName());
         setSerialNumber(cert.getSerialNumber().toString());

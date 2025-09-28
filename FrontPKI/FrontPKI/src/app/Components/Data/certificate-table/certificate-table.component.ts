@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, output } from '@angular/core';
 import { SimpleCertificateDTO } from '../../../DTO/Certificate/SimpleCertificateDTO';
 import { CardComponent } from "../../Containers/card/card.component";
 import { BasicCertificateDataComponent } from "../basic-certificate-data/basic-certificate-data.component";
@@ -13,4 +13,12 @@ import { BasicCertificateDataComponent } from "../basic-certificate-data/basic-c
 })
 export class CertificateTableComponent {
   @Input() certData: SimpleCertificateDTO[] = [];
+  certClicked = output<SimpleCertificateDTO>();
+  selectedCert?: SimpleCertificateDTO;
+
+
+  certSelected(c: SimpleCertificateDTO){
+    this.selectedCert = c;
+    this.certClicked.emit(c);
+  }
 }

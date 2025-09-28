@@ -16,11 +16,7 @@ export class CertificateService {
     return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates`);
   }
 
-  createCA(data: CreateCertificateDTO){
-    return this.http.post(`${environment.apiHost}/api/certificates/ca`, data);
-  }
-
-  createNonCA(data: CreateCertificateDTO){
-    return this.http.post(`${environment.apiHost}/api/certificates/non-ca`, data);
+  createCertificate(data: CreateCertificateDTO){
+    return this.http.post(`${environment.apiHost}/api/certificates`, data);
   }
 }

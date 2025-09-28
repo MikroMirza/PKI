@@ -48,10 +48,12 @@ import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
 import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
 import rs.tim33.PKI.Models.CertificateModel;
+import rs.tim33.PKI.Models.CertificateType;
 import rs.tim33.PKI.Models.Role;
 import rs.tim33.PKI.Models.UserModel;
 import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Repositories.UserRepository;
+import rs.tim33.PKI.Services.CRLService;
 import rs.tim33.PKI.Services.KeystoreService;
 
 @Service
@@ -139,6 +141,8 @@ public class CertificateService {
 		//If the issuing certificate has expired
 		if(parentCert.getNotAfter().isBefore(LocalDateTime.now()))
 			throw new InvalidIssuerException("The issuing certificate has expired");
+		//TODO: CHECK PARENT EXTENSIONS
+		//BASIC CONSTRAINT AND STUFF
 		
 		//Check CA user stuff
 		UserModel user = loggedUserUtils.getLoggedInUser();
@@ -147,6 +151,23 @@ public class CertificateService {
 			if(!user.getCACerts().contains(parentCert.getRootCertificate()))
 				throw new AccessDeniedException("CA Users can only issue certificates for their organization");
 		}
+	}
+	
+	private void validateRootCertData(
+			String cn, 
+			String org, 
+			String orgUnit, 
+			LocalDateTime 
+			notBefore, 
+			LocalDateTime notAfter,
+			int pathLenConstraint
+			) throws AuthenticationException, InvalidCertificateRequestException {
+		validateGeneralData(cn, org, orgUnit, notBefore, notAfter);
+		if(loggedUserUtils.getLoggedInRole() != Role.ADMIN)
+			throw new AccessDeniedException("Only admins can create root certificates");
+		
+		if (pathLenConstraint < 0)
+			throw new InvalidCertificateRequestException("Path len can't be negative");
 	}
 	
 	private void validateIntermediateCertData(
@@ -177,75 +198,6 @@ public class CertificateService {
 			LocalDateTime notAfter
 			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException {
 		validateNonSelfIssuedCertData(issuerId, cn, org, orgUnit, notBefore, notAfter);
-		
-	}
-	
-	public KeyPairAndCert createSelfSigned(
-			String cn,
-			String org,
-			String orgUnit,
-			LocalDateTime notBefore,
-			LocalDateTime notAfter
-			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException, CertificateGenerationException {
-		validateGeneralData(cn, org, orgUnit, notBefore, notAfter);
-		if(loggedUserUtils.getLoggedInRole() != Role.ADMIN)
-			throw new AccessDeniedException("Only admins can create CA certificates");
-		
-		KeyPairGenerator keyGen;
-		try {
-			keyGen = KeyPairGenerator.getInstance("RSA");
-		} catch (NoSuchAlgorithmException e) {
-			throw new CertificateGenerationException("Invalid key algorithm name");
-		}
-        keyGen.initialize(2048);
-        KeyPair keyPair = keyGen.generateKeyPair();
-
-        long now = System.currentTimeMillis();
-
-        String issuerDn = "CN=" + cn + ", O=" + org + ", OU=" + orgUnit;
-        X500Name issuer = new X500Name(issuerDn);
-        BigInteger serial = BigInteger.valueOf(now);
-
-        JcaX509v3CertificateBuilder certBuilder =
-                new JcaX509v3CertificateBuilder(
-                        issuer,
-                        serial, 
-                        Date.from(notBefore.atZone(ZoneId.systemDefault()).toInstant()),
-                        Date.from(notAfter.atZone(ZoneId.systemDefault()).toInstant()),
-                        issuer,
-                        keyPair.getPublic());
-
-        try {
-			certBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
-		} catch (CertIOException e) {
-			throw new CertificateGenerationException("Error adding basic constraint");
-		}
-
-        ContentSigner signer;
-        X509Certificate cert;
-		try {
-			signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
-			cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
-		} catch (CertificateException | OperatorCreationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new CertificateGenerationException("Error signing certificate");
-		}
-        
-        //TODO ENCRYPT STUFF
-        CertificateModel certModel = new CertificateModel(cert, null, issuerDn);
-		try {
-			byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(certModel.getAlias())).getEncoded();
-	        byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
-	        certModel.setEncryptedPrivateKey(encryptedPrivateKey);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new CertificateGenerationException("Error encrypting private key");
-		}
-        
-        certRepo.save(certModel);
-        
-        return new KeyPairAndCert(keyPair, cert);
 	}
 	
 	public int generateKeyUsageBits(Iterable<String> keys) {
@@ -267,10 +219,12 @@ public class CertificateService {
 	
 	public KeyPairAndCert generateCertificate(CreateCertificateDTO data)
 			throws AuthenticationException, InvalidCertificateRequestException, InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
-		if(data.isEndEntity)
+		if(data.certType == CertificateType.END_ENTITY)
 			validateEndEntityCertData(data.issuerId, data.subject.commonName, data.subject.organization, data.subject.orgUnit, data.notBefore, data.notAfter);
-		else
+		else if(data.certType == CertificateType.INTERMEDIATE)
 			validateIntermediateCertData(data.issuerId, data.subject.commonName, data.subject.organization, data.subject.orgUnit, data.notBefore, data.notAfter, data.pathLenConstraint);
+		else
+			validateRootCertData(data.subject.commonName, data.subject.organization, data.subject.orgUnit, data.notBefore, data.notAfter, data.pathLenConstraint);
 		
 		//Generate keys
 		KeyPairGenerator keyGen;
@@ -326,8 +280,7 @@ public class CertificateService {
         
         //BasicConstraint
         BasicConstraints constraint;
-        if(data.isEndEntity) constraint = new BasicConstraints(false);
-        else if (parentCert == null) constraint = new BasicConstraints(true);
+        if(data.certType == CertificateType.END_ENTITY) constraint = new BasicConstraints(false);
         else constraint = new BasicConstraints(data.pathLenConstraint);
         try {
 			certBuilder.addExtension(Extension.basicConstraints, true, constraint);
@@ -381,9 +334,8 @@ public class CertificateService {
 			}
         }
         
-        
+        //CRL
         try {
-			//!!!!! MIGHT BE WRONG
 			certBuilder.addExtension(
 				    Extension.cRLDistributionPoints,
 				    false,
@@ -392,7 +344,7 @@ public class CertificateService {
 				            new DistributionPointName(
 				                new GeneralNames(
 				                    new GeneralName(GeneralName.uniformResourceIdentifier,
-				                        "https://localhost:8443/crl/" + data.issuerId + ".crl"))),
+				                        "https://localhost:8443/crl/" + data.issuerId))),
 				            null,
 				            null)
 				    })
@@ -410,13 +362,14 @@ public class CertificateService {
             ContentSigner signer;
             if(parentCert != null) signer = new JcaContentSignerBuilder("SHA256withRSA").build(getPrivateKeyOfCert(data.issuerId));
             else signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
+            
             cert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
         } catch (Exception e) {
 			throw new CertificateGenerationException("Error signing certificate");
 		}
         
         //Persist it in the database
-        CertificateModel certModel = new CertificateModel(cert, parentCert, parentCert.getAlias());
+        CertificateModel certModel = new CertificateModel(cert, parentCert);
         try {
             byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(certModel.getAlias())).getEncoded();
             byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
@@ -461,6 +414,7 @@ public class CertificateService {
 			revokeCertificate(child,"Parent certificate: " + cert.getAlias() + " has been revoked.");
 		}
 		
+		//TODO: Save crl to file in generate, and call generate from here - low priority who cares
 	}
 	
 }
