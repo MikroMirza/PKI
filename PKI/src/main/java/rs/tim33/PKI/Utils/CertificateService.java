@@ -241,7 +241,6 @@ public class CertificateService {
 		if(!data.subject.organization.isBlank()) subjectDn += ", O=" + data.subject.organization;
 		if(!data.subject.orgUnit.isBlank()) subjectDn += ", OU=" + data.subject.orgUnit;
 		if(!data.subject.country.isBlank()) subjectDn += ", C=" + data.subject.country;
-		if(!data.subject.state.isBlank()) subjectDn += ", S=" + data.subject.state;
 		if(!data.subject.locality.isBlank()) subjectDn += ", L=" + data.subject.locality;
 		X500Name subject = new X500Name(subjectDn);
         X500Name issuer;

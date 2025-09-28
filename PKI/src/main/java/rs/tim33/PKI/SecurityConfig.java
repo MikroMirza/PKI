@@ -53,7 +53,6 @@ public class SecurityConfig {
 		.cors(Customizer.withDefaults())
 		.csrf(t -> t.disable())
 		.headers(t -> t.frameOptions(f -> f.disable()))
-		.exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler))
 		.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -90,7 +90,7 @@ public class CertificateController {
 		return ResponseEntity.ok().build();
     }
 	
-	@PostMapping("/certificates/{id}/download")
+	@PostMapping("/{id}/download")
 	public ResponseEntity<byte[]> downloadCertificate(@PathVariable Long id,@RequestBody String password) throws Exception {
 
 	    CertificateModel certModel = certRepo.findById(id)
