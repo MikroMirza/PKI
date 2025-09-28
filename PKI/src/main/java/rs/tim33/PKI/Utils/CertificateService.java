@@ -399,20 +399,16 @@ public class CertificateService {
 		return new ArrayList<CertificateModel>();
 	}
 	
-	public void revokeCertificate(CertificateModel cert, String reason) {
-		if(cert.isRevoked())
-			return;
-		
-		cert.setRevoked(true);
-		cert.setRevocationReason(reason);
-		cert.setRevokedAt(LocalDateTime.now());
-		
-		//Maybe disable private key.
-		
-		List<CertificateModel> children = cert.getChildCertificates();
-		for(CertificateModel child: children) {
-			revokeCertificate(child,"Parent certificate: " + cert.getAlias() + " has been revoked.");
-		}
+	public void revokeCertificate(CertificateModel cert, RevocationReason reason) {
+	    if (cert.isRevoked())
+	        return;
+
+	    cert.setRevoked(true);
+	    cert.setRevocationReason(reason);
+	    cert.setRevokedAt(LocalDateTime.now());
+	    for (CertificateModel child : cert.getChildCertificates()) {
+	        revokeCertificate(child, reason);
+	    }
 		
 		//TODO: Save crl to file in generate, and call generate from here - low priority who cares
 	}
