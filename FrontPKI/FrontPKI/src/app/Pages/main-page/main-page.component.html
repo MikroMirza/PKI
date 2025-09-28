@@ -11,6 +11,7 @@
       Create certificate
     </button>
     <button (click)="logout()" [routerLink]="['']">Logout</button>
+    <button [disabled]="!selectedCert" (click)="exportCertificate()">Export</button>
     <div class="button-row">
       <button *ngIf="role === 'ADMIN' || role === 'CA'" 
               [disabled]="!selectedCert"

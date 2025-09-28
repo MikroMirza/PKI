@@ -1,15 +1,20 @@
 package rs.tim33.PKI.Controllers;
 
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Optional;
 
 import javax.security.sasl.AuthenticationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +29,9 @@ import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
 import rs.tim33.PKI.Models.CertificateModel;
 import rs.tim33.PKI.Repositories.CertificateRepository;
+import rs.tim33.PKI.Services.KeystoreService;
 import rs.tim33.PKI.Utils.CertificateService;
+import rs.tim33.PKI.Utils.KeyHelper;
 import rs.tim33.PKI.Utils.RevocationReason;
 
 @RestController
@@ -34,7 +41,10 @@ public class CertificateController {
 	private CertificateService certService;
 	@Autowired
 	private CertificateRepository certRepo;
-	
+	@Autowired
+	private KeystoreService keystoreService;
+	@Autowired
+	private KeyHelper keyHelper;
 	@PostMapping
 	public ResponseEntity<?> create(@RequestBody CreateCertificateDTO data){
 		try {
@@ -79,6 +89,33 @@ public class CertificateController {
 		certService.rerevokeCertificate(cert, reason);
 		return ResponseEntity.ok().build();
     }
+	
+	@PostMapping("/certificates/{id}/download")
+	public ResponseEntity<byte[]> downloadCertificate(@PathVariable Long id,@RequestBody String password) throws Exception {
+
+	    CertificateModel certModel = certRepo.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Certificate not found"));
+
+	    X509Certificate x509Cert = certModel.getCertificate();
+	    PrivateKey privateKey;
+		try {
+			privateKey = keyHelper.decryptPrivateKey(certModel.getEncryptedPrivateKey());
+		} catch (Exception e) {
+			e.printStackTrace();
+		    throw new RuntimeException("Failed to decrypt private key", e);
+		}
+	    String alias = certModel.getAlias();
+
+	    byte[] keystoreBytes = keystoreService.exportAsPKCS12(privateKey, x509Cert, alias, password);
+
+	    return ResponseEntity.ok()
+	            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"certificate.p12\"")
+	            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+	            .body(keystoreBytes);
+	}
+
+
+
 	
 	@GetMapping
 	public ResponseEntity<List<SimpleCertificateDTO>> getCertificates(){

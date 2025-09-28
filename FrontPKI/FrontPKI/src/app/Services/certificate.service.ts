@@ -24,4 +24,18 @@ export class CertificateService {
   revokeCertificate(data:RevokedCertificateDTO){
     return this.http.post(`${environment.apiHost}/api/certificates/revoked`,data)
   }
+
+  downloadCertificate(certId: number, password: string) {
+  this.http.post(`/api/certificates/${certId}/download`, password, {
+    responseType: 'blob'
+  }).subscribe(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "certificate.p12";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  });
+}
+
 }
