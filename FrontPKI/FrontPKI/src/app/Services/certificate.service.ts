@@ -26,7 +26,7 @@ export class CertificateService {
   }
 
   downloadCertificate(certId: number, password: string) {
-  this.http.post(`/api/certificates/${certId}/download`, password, {
+  this.http.post(`${environment.apiHost}/api/certificates/${certId}/download`, password, {
     responseType: 'blob'
   }).subscribe(blob => {
     const url = window.URL.createObjectURL(blob);
