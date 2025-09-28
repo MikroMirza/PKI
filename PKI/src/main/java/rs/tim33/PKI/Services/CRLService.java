@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import rs.tim33.PKI.Models.CertificateModel;
 import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Utils.CertificateService;
+import rs.tim33.PKI.Utils.RevocationReason;
 
 import org.bouncycastle.asn1.x509.CRLReason;
 
@@ -40,12 +41,13 @@ public class CRLService {
 
         JcaX509v2CRLBuilder crlBuilder = new JcaX509v2CRLBuilder(issuerX500, now);
         crlBuilder.setNextUpdate(nextUpdate);
-
+        
         for (CertificateModel revoked : certRepo.findByParentCertificateAndRevokedTrue(issuerCert)) {
+        	RevocationReason rzn = revoked.getRevocationReason();
         	crlBuilder.addCRLEntry(
         		    new BigInteger(revoked.getSerialNumber()),
         		    Date.from(revoked.getRevokedAt().atZone(ZoneId.systemDefault()).toInstant()),
-        		    1
+        		    rzn.getCode()
         		    //Maybe change 1 to 0 or something else if the reason of revokation isn't specified.
         		);
         }
