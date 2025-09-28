@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.websocket.server.PathParam;
 import rs.tim33.PKI.DTO.Certificate.SimpleCertificateDTO;
 import rs.tim33.PKI.DTO.User.RegisterUserDTO;
+import rs.tim33.PKI.DTO.User.SimpleUserDTO;
 import rs.tim33.PKI.DTO.Verification.VerificationResponse;
 import rs.tim33.PKI.Exceptions.ErrorMessage;
 import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
@@ -96,8 +97,8 @@ public class UserController {
 	}
 
 	@PostMapping("/{userId}/certificates")
-	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<?> giveUserCertificate(@PathParam("userId") Long userId, @RequestParam("certId") Long certId){
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<?> giveUserCertificate(@PathVariable("userId") Long userId, @RequestBody Long certId){
 		try {
 			userService.giveUserCertificate(userId, certId);
 		} catch (EntityNotFoundException e) {
@@ -108,13 +109,13 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage(e.getMessage(), "ERR_BAD_ARG"));
 		}
 		
-		return ResponseEntity.status(HttpStatus.OK).body("Success");
+		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
 	
 	
 	@DeleteMapping("/{userId}/certificates/{certId}")
-	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<?> removeUsersCertificate(@PathParam("userId") Long userId, @PathParam("certId") Long certId){
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<?> removeUsersCertificate(@PathVariable("userId") Long userId, @PathVariable("certId") Long certId){
 		try {
 			userService.removeUsersCertificate(userId, certId);
 		} catch (EntityNotFoundException e) {
@@ -122,14 +123,14 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorMessage(e.getMessage(), "ERR_NOT_FOUND"));
 		}
 		
-		return ResponseEntity.status(HttpStatus.OK).body("Success");
+		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
 	
 	@GetMapping("/{userId}/certificates")
-	public ResponseEntity<?> getUsersCertificates(@PathParam("userId") Long userId){
+	public ResponseEntity<?> getUsersCertificates(@PathVariable("userId") Long userId){
 		UserModel loggedUser = loggedUserUtils.getLoggedInUser();
 		if(loggedUser == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorMessage("Please log in", "ERR_UNATUH"));
-		if(loggedUser.getRole() != Role.ADMIN || loggedUser.getId() != userId)
+		if(loggedUser.getRole() != Role.ADMIN && loggedUser.getId() != userId)
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorMessage("Access denied", "ERR_FORBIDDEN"));
 		
 		UserModel user = userRepo.findById(userId).orElse(null);
@@ -137,5 +138,19 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorMessage("User not found", "ERR_NOT_FOUND"));
 		
 		return ResponseEntity.status(HttpStatus.OK).body(certService.getUsersCertificates(user).stream().map(c -> new SimpleCertificateDTO(c)).toList());
+	}
+	
+	@GetMapping
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<?> getUsers(){
+		return ResponseEntity.status(HttpStatus.OK).body(userRepo.findAll().stream().map(u -> new SimpleUserDTO(u)).toList());
+	}
+	
+	@GetMapping("/{userId}")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<?> getUser(@PathVariable("userId") Long userId){
+		UserModel u = userRepo.findById(userId).orElse(null);
+		if(u == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		return ResponseEntity.status(HttpStatus.OK).body(new SimpleUserDTO(u));
 	}
 }

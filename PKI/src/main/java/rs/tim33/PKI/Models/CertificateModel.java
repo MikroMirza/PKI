@@ -40,11 +40,10 @@ public class CertificateModel {
     private String serialNumber;
     private LocalDateTime notBefore;
     private LocalDateTime notAfter;
-    private String organization;
     @Lob
     private byte[] publicKey;
-    @Lob
-    private byte[] encryptedPrivateKey;
+    @Column(columnDefinition = "TEXT")
+    private String encryptedPrivateKey;
     
     //X500Name
     @Column(columnDefinition = "TEXT")
@@ -103,7 +102,6 @@ public class CertificateModel {
         setRevokedAt(null);
 
         X500Name name = new X500Name(cert.getSubjectX500Principal().getName());
-        setOrganization(name.getRDNs(BCStyle.O)[0].getFirst().getValue().toString());
         setPublicKey(cert.getPublicKey().getEncoded());
     }
     

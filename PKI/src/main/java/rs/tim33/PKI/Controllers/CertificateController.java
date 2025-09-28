@@ -45,6 +45,7 @@ public class CertificateController {
 	private KeystoreService keystoreService;
 	@Autowired
 	private KeyHelper keyHelper;
+	
 	@PostMapping
 	public ResponseEntity<?> create(@RequestBody CreateCertificateDTO data){
 		try {
@@ -99,7 +100,7 @@ public class CertificateController {
 	    X509Certificate x509Cert = certModel.getCertificate();
 	    PrivateKey privateKey;
 		try {
-			privateKey = keyHelper.decryptPrivateKey(certModel.getEncryptedPrivateKey());
+			privateKey = certService.getPrivateKeyOfCert(id);
 		} catch (Exception e) {
 			e.printStackTrace();
 		    throw new RuntimeException("Failed to decrypt private key", e);

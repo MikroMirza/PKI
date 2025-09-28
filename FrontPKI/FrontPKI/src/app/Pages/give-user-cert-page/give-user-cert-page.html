@@ -1,0 +1,19 @@
+<mat-form-field>
+    <mat-label>Select a CA user</mat-label>
+    <mat-select [(value)]="selectedUserId" (valueChange)="userChanged()">
+        <mat-option>None</mat-option>
+        <mat-option *ngFor="let user of userList" [value]="user.id">{{user.email}}</mat-option>
+    </mat-select>
+</mat-form-field>
+
+<div class="example-button-row">
+    <button matButton="outlined" [disabled]="selected == null || selectedAllCert == null" (click)="addClicked()">Add certificate</button>
+</div>
+
+<h4>All certificates</h4>
+<app-select-certificate [certData]="allCerts || []" (onCertSelected)="availableCertSelected($event)"/>
+<h4>Assigned certificates</h4>
+<app-select-certificate [certData]="selected?.certs || []" (onCertSelected)="userCertSelected($event)"/>
+<div class="example-button-row">
+    <button matButton="outlined" [disabled]="selectedUserId == null || selectedUserCert == null" (click)="removeClicked()">Remove certificate</button>
+</div>

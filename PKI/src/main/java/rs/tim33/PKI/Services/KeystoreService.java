@@ -7,6 +7,8 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,15 +23,15 @@ public class KeystoreService {
 	@Autowired
 	private KeyHelper keyHelper;
 	
-	private byte[] generateKey(String alias) {
+	private SecretKey generateKey(String alias) {
 		try {
 			AliasKey ak = new AliasKey();
-			byte[] key = keyHelper.generateEncryptedKeystoreKey();
+			SecretKey key = keyHelper.generateAESKey();
 			ak.setAlias(alias);
-			ak.setEncryptedKey(key);
+			ak.setEncryptedKey(keyHelper.encrypt(keyHelper.getMasterKey(), key.getEncoded()));
 			keyRepo.save(ak);
 			return key;
-		} catch (NoSuchAlgorithmException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -47,13 +49,9 @@ public class KeystoreService {
 	    return baos.toByteArray();
 	}
 
-	
-	
-	public byte[] getEncryptedOrganizationKey(String orgName) {
-		return keyRepo.findByAlias(orgName).map(t -> t.getEncryptedKey()).orElseGet(() -> generateKey(orgName));
-	}
-	
-	public byte[] getEncryptedKeyFromAlias(String alias) {
-		return keyRepo.findByAlias(alias).map(t -> t.getEncryptedKey()).orElseGet(() -> generateKey(alias));
+	public String getEncryptedKeyFromAlias(String alias) {
+		if (keyRepo.findByAlias(alias).isEmpty())
+			generateKey(alias);
+		return keyRepo.findByAlias(alias).map(t -> t.getEncryptedKey()).get();
 	}
 }

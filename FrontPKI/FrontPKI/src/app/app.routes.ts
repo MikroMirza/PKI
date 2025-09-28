@@ -5,11 +5,13 @@ import { MainPageComponent } from './Pages/main-page/main-page.component';
 import { CreateCaUserComponent } from './Pages/create-ca-user/create-ca-user.component';
 import { RegistrationComponent  } from './Pages/registration/registration';
 import { GenerateCertificateComponent } from './Pages/generate-certificate/generate-certificate.component';
+import { GiveUserCertPage } from './Pages/give-user-cert-page/give-user-cert-page';
 
 export const routes: Routes = [
   {path: 'authentication/verification', component: Verification},
   {path: 'mainpage', component: MainPageComponent},
   {path: 'create-certificate', component: GenerateCertificateComponent},
+  {path: 'assign-ca', component: GiveUserCertPage},
   {path: 'users/ca/new', component: CreateCaUserComponent},
   {path: 'users/new', component: RegistrationComponent},
   {path: '', component: LoginpageComponent}

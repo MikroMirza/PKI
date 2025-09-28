@@ -18,6 +18,6 @@ public class AliasKey {
 	private Long id;
 	@Column(unique = true)
 	private String alias;
-	@Lob
-	private byte[] encryptedKey;
+	@Column(columnDefinition = "TEXT")
+	private String encryptedKey;
 }

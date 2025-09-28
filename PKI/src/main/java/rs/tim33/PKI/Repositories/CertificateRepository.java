@@ -9,7 +9,6 @@ import rs.tim33.PKI.Models.CertificateModel;
 
 @Repository
 public interface CertificateRepository extends JpaRepository<CertificateModel, Long>{
-	List<CertificateModel> findByOrganization(String organization);
 	List<CertificateModel> findByParentCertificateAndRevokedTrue(CertificateModel issuer);
 
 }

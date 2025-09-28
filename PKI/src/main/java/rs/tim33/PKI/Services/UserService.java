@@ -42,7 +42,7 @@ public class UserService {
 		user.setSurname(surname);
 		user.setOrganization(org);
 		user.setRole(Role.USER);
-		user.setKeystorePasswordEncrypted(keyHelper.generateEncryptedKeystoreKey());
+		user.setKeystorePasswordEncrypted(keyHelper.encrypt(keyHelper.getMasterKey(), keyHelper.generateAESKey().getEncoded()));
 		user = userRepo.save(user);
 		
 		verificationService.sendVerificationEmail(user);
@@ -61,7 +61,7 @@ public class UserService {
 		user.setOrganization(org);
 		user.setRole(Role.CA);
 		user.setVerified(true);
-		user.setKeystorePasswordEncrypted(keyHelper.generateEncryptedKeystoreKey());
+		user.setKeystorePasswordEncrypted(keyHelper.encrypt(keyHelper.getMasterKey(), keyHelper.generateAESKey().getEncoded()));
 		
 		return userRepo.save(user);
 	}

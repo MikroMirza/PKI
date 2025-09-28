@@ -48,7 +48,7 @@ public class UserModel {
     
     //Only for regular users
     private String organization;
-    @Lob
-    private byte[] keystorePasswordEncrypted;
+    @Column(columnDefinition = "TEXT")
+    private String keystorePasswordEncrypted;
     private boolean isVerified=false;
 }

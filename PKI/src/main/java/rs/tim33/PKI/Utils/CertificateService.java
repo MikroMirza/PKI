@@ -3,6 +3,7 @@ package rs.tim33.PKI.Utils;
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -11,15 +12,19 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.AuthenticationException;
 
 import org.bouncycastle.asn1.x500.X500Name;
@@ -90,8 +95,14 @@ public class CertificateService {
 	public PrivateKey getPrivateKeyOfCert(Long certificateId) throws Exception {
 		CertificateModel cert = certRepo.findById(certificateId).orElse(null);
 		
-		byte[] keystoreKey = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(cert.getAlias())).getEncoded();
-		PrivateKey privateKey = keyHelper.decryptPrivateKey(cert.getEncryptedPrivateKey(), keystoreKey);
+		String orgEncrypted = keystoreService.getEncryptedKeyFromAlias(cert.getAlias());
+		byte[] orgDecrypted = keyHelper.decrypt(keyHelper.getMasterKey(), orgEncrypted);
+		SecretKey orgKey = new SecretKeySpec(orgDecrypted, "AES");
+		String privateEncrypted = cert.getEncryptedPrivateKey();
+		byte[] privateDecrypted = keyHelper.decrypt(orgKey, privateEncrypted);
+		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateDecrypted);
+		PrivateKey privateKey = KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+
 		return privateKey;
 	}
 	
@@ -353,6 +364,7 @@ public class CertificateService {
 		}
         
         X509Certificate cert;
+        
         //Create certificate
         try {
             ContentSigner signer;
@@ -367,14 +379,26 @@ public class CertificateService {
         //Persist it in the database
         certModel.setValues(cert, parentCert);
         try {
-            byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(certModel.getAlias())).getEncoded();
-            byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
-            certModel.setEncryptedPrivateKey(encryptedPrivateKey);
+        	String orgEncrypted = keystoreService.getEncryptedKeyFromAlias(certModel.getAlias());
+    		byte[] orgDecrypted = keyHelper.decrypt(keyHelper.getMasterKey(), orgEncrypted);
+    		SecretKey orgKey = new SecretKeySpec(orgDecrypted, "AES");
+    		String privateEncrypted = keyHelper.encrypt(orgKey, keyPair.getPrivate().getEncoded());
+    		certModel.setEncryptedPrivateKey(privateEncrypted);
         } catch (Exception e) {
         	throw new CertificateGenerationException("Error encrypting private key");
 		}
         
         certRepo.save(certModel);
+        
+        //private key encryption / decryption test kinda
+        Boolean verified = false;
+        try {
+        	if(parentCert != null)cert.verify(parentCert.getCertificate().getPublicKey());
+        	verified = true;
+        } catch (Exception e) {
+        	
+        }
+        System.out.println("VERIFIED: " + Boolean.toString(verified));
         
 		return new KeyPairAndCert(keyPair, cert);
 	}
