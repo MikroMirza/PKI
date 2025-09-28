@@ -55,6 +55,13 @@ public class KeyHelper {
         return keyFactory.generatePrivate(spec);
     }
     
+    public PrivateKey decryptPrivateKey(byte[] key) throws Exception {
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(key);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(spec);
+    }
+
+    
     public byte[] encryptPrivateKey(PrivateKey key, byte[] password) {
     	return key.getEncoded();
     }

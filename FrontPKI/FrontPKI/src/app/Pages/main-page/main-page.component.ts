@@ -9,6 +9,7 @@ import { CertificateService } from '../../Services/certificate.service';
 import { CertificateTableComponent } from "../../Components/Data/certificate-table/certificate-table.component";
 import { MatDialog } from '@angular/material/dialog';
 import { RevokeDialogComponent } from '../../dialog/revoke-reason-dialog/revoke-reason-dialog';
+import { ExportPasswordDialogComponent } from '../../dialog/export-password-dialog-component/export-password-dialog-component';
 import { SelectCertificate } from "../../Components/Data/select-certificate/select-certificate";
 import { CRLService } from '../../Services/crl.service';
 
@@ -71,6 +72,21 @@ markRevoked(cert: SimpleCertificateDTO) {
     cert.children.forEach(child => this.markRevoked(child));
   }
 }
+exportCertificate() {
+  if (!this.selectedCert) return;
+
+  const cert = this.selectedCert;
+  const dialogRef = this.dialog.open(ExportPasswordDialogComponent, {
+    width: '300px'
+  });
+
+  dialogRef.afterClosed().subscribe(password => {
+    if (!password) return;
+
+    this.certService.downloadCertificate(cert.id, password);
+  });
+}
+
 
 showCrl(){
   const decoder = new TextDecoder("UTF-8");
