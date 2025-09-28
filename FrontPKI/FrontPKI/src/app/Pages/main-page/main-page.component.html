@@ -13,14 +13,12 @@
     <button (click)="logout()" [routerLink]="['']">Logout</button>
     <div class="button-row">
       <button *ngIf="role === 'ADMIN' || role === 'CA'" 
-              [disabled]="!selectedCert"
+              [disabled]="selectedCert == null"
               (click)="openRevokeDialog()">
         Revoke Certificate
       </button>
     </div>
   </div>
-
-  <div class="table-container">
-    <app-certificate-table [certData]="(certData$ | async) || []"></app-certificate-table>
-  </div>
+  <button (click)="showCrl()"></button>
+  <app-select-certificate [certData]="(certData$ | async) || []" (onCertSelected)="onSelectCert($event)"></app-select-certificate>
 </div>

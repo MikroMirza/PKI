@@ -16,4 +16,6 @@ export class CRLService {
     });
     return this.http.get(`${environment.apiHost}/crl/${issuerCertId}`, { headers, responseType: 'arraybuffer' });
   }
+
+  
 }
