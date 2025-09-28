@@ -83,11 +83,8 @@ public class CertificateModel {
     @ManyToOne
     private UserModel ownerUser;
     
-    
-    public CertificateModel() {}
-    
-    public CertificateModel(X509Certificate cert, CertificateModel parent) {
-        if(parent != null)
+    public void setValues(X509Certificate cert, CertificateModel parent) {
+    	if(parent != null)
         	setAlias(parent.getAlias());
         else
         	setAlias(cert.getSubjectX500Principal().getName());
@@ -118,6 +115,8 @@ public class CertificateModel {
         setOrganization(name.getRDNs(BCStyle.O)[0].getFirst().getValue().toString());
         setPublicKey(cert.getPublicKey().getEncoded());
     }
+    
+    public CertificateModel() {}
     
     public X509Certificate getCertificate() throws Exception {
     	CertificateFactory cf;

@@ -10,11 +10,13 @@ import { CertificateTableComponent } from "../../Components/Data/certificate-tab
 import { MatDialog } from '@angular/material/dialog';
 import { RevokeDialogComponent } from '../../dialog/revoke-reason-dialog/revoke-reason-dialog';
 import { ExportPasswordDialogComponent } from '../../dialog/export-password-dialog-component/export-password-dialog-component';
+import { SelectCertificate } from "../../Components/Data/select-certificate/select-certificate";
+import { CRLService } from '../../Services/crl.service';
 
 @Component({
   selector: 'app-main-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterLink, CertificateTableComponent],
+  imports: [CommonModule, RouterModule, RouterLink, SelectCertificate],
   templateUrl: './main-page.component.html',
   styleUrl: './main-page.component.css'
 })
@@ -24,6 +26,7 @@ export class MainPageComponent {
     private router: Router,
     private route: ActivatedRoute,
     private certService: CertificateService,
+    private crlService: CRLService,
     private dialog:MatDialog){}
   selectedCert: SimpleCertificateDTO | null = null;
 
@@ -42,13 +45,19 @@ export class MainPageComponent {
 
   onSelectCert(cert: SimpleCertificateDTO) {
     this.selectedCert = cert;
+    console.log(this.selectedCert)
   }
+
   openRevokeDialog() {
-  if (!this.selectedCert) return;
+  console.log("GAs1")
+  if (this.selectedCert == null) return;
+
+  console.log("GAs2")
 
   const dialogRef = this.dialog.open(RevokeDialogComponent, {
     data: { certId: this.selectedCert.id }
   });
+  console.log("GAs3")
 
   dialogRef.afterClosed().subscribe((revoked: boolean) => {
     if (revoked && this.selectedCert) {
@@ -79,5 +88,11 @@ exportCertificate() {
 }
 
 
+showCrl(){
+  const decoder = new TextDecoder("UTF-8");
+  this.crlService.getCRL(3).subscribe({
+    next: (data) => console.log(Array.from(new Uint8Array(data)).map((b) => b.toString(16).padStart(2, "0")).join(""))
+  })
+}
 }
 

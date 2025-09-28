@@ -10,4 +10,5 @@ import { Component, Input } from '@angular/core';
 })
 export class CardComponent {
   @Input() selected = false;
+  @Input() revoked = false;
 }

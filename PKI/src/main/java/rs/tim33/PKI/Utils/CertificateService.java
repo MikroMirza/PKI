@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
@@ -105,10 +106,6 @@ public class CertificateService {
 		
 		if(cn == null || cn.length() < 3)
 			throw new InvalidCertificateRequestException("Invalid common name");
-		if(org == null || org.length() < 3)
-			throw new InvalidCertificateRequestException("Invalid organization name");
-		if(orgUnit == null || orgUnit.length() < 3)
-			throw new InvalidCertificateRequestException("Invalid organization unit");
 		if(notBefore == null)
 			throw new InvalidCertificateRequestException("Invalid notBefore time");
 		if(notAfter == null)
@@ -217,6 +214,7 @@ public class CertificateService {
 		return bits;
 	}
 	
+	@Transactional
 	public KeyPairAndCert generateCertificate(CreateCertificateDTO data)
 			throws AuthenticationException, InvalidCertificateRequestException, InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
 		if(data.certType == CertificateType.END_ENTITY)
@@ -333,7 +331,8 @@ public class CertificateService {
 				throw new CertificateGenerationException("Error adding EKU constraint");
 			}
         }
-        
+
+        CertificateModel certModel = certRepo.save(new CertificateModel());
         //CRL
         try {
 			certBuilder.addExtension(
@@ -344,7 +343,7 @@ public class CertificateService {
 				            new DistributionPointName(
 				                new GeneralNames(
 				                    new GeneralName(GeneralName.uniformResourceIdentifier,
-				                        "https://localhost:8443/crl/" + data.issuerId))),
+				                        "https://localhost:8443/crl/" + certModel.getId()))),
 				            null,
 				            null)
 				    })
@@ -369,7 +368,7 @@ public class CertificateService {
 		}
         
         //Persist it in the database
-        CertificateModel certModel = new CertificateModel(cert, parentCert);
+        certModel.setValues(cert, parentCert);
         try {
             byte[] privateKeyPassword = keyHelper.decryptKeystoreKey(keystoreService.getEncryptedKeyFromAlias(certModel.getAlias())).getEncoded();
             byte[] encryptedPrivateKey = keyHelper.encryptPrivateKey(keyPair.getPrivate(), privateKeyPassword);
@@ -410,6 +409,7 @@ public class CertificateService {
 	        revokeCertificate(child, reason);
 	    }
 		
+	    certRepo.save(cert);
 		//TODO: Save crl to file in generate, and call generate from here - low priority who cares
 	}
 	
@@ -417,13 +417,14 @@ public class CertificateService {
 	    if (cert.isRevoked())
 	        return;
 
-	    cert.setRevoked(true);
+	    cert.setRevoked(false);
 	    cert.setRevocationReason(reason);
 	    cert.setRevokedAt(LocalDateTime.now());
 	    for (CertificateModel child : cert.getChildCertificates()) {
 	        revokeCertificate(child, reason);
 	    }
-		
+
+	    certRepo.save(cert);
 		//TODO: Save crl to file in generate, and call generate from here - low priority who cares
 	}
 	

@@ -8,7 +8,7 @@ table, tr, td, th{
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     row-gap: 30px;
 }
-.revoked {
+.isRevoked {
   background-color: orange;
   color: white;
   font-weight: bold;

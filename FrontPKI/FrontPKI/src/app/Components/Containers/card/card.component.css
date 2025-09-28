@@ -14,3 +14,7 @@
 .card-div.selected {
     box-shadow: 0px 0px 15px #0ac6ff;
 }
+
+.card-div.revoked {
+    background-color: rgb(255, 149, 149);
+}

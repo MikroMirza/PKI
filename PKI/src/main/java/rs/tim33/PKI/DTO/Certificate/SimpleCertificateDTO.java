@@ -63,5 +63,7 @@ public class SimpleCertificateDTO {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+    	
+    	isRevoked = cert.isRevoked();
     }
 }
