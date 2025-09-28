@@ -16,7 +16,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.security.sasl.AuthenticationException;
 
@@ -139,15 +141,11 @@ public class CertificateService {
 		if(parentCert.getNotAfter().isBefore(LocalDateTime.now()))
 			throw new InvalidIssuerException("The issuing certificate has expired");
 		//TODO: CHECK PARENT EXTENSIONS
+		//CHECK IF IT BELONGS TO CA
 		//BASIC CONSTRAINT AND STUFF
 		
 		//Check CA user stuff
 		UserModel user = loggedUserUtils.getLoggedInUser();
-		
-		if(user.getRole() == Role.CA) {
-			if(!user.getCACerts().contains(parentCert.getRootCertificate()))
-				throw new AccessDeniedException("CA Users can only issue certificates for their organization");
-		}
 	}
 	
 	private void validateRootCertData(
@@ -382,18 +380,29 @@ public class CertificateService {
 		return new KeyPairAndCert(keyPair, cert);
 	}
 	
+	public List<CertificateModel> getUsersCertificates(UserModel user){
+		Set<CertificateModel> availableCerts = new HashSet<>();
+		List<CertificateModel> certs = user.getCertificates().stream().toList();
+		while(certs.size() > 0) {
+			CertificateModel cert = certs.remove(0);
+			certs.addAll(cert.getChildCertificates());
+			availableCerts.add(cert);
+		}
+		
+		return availableCerts.stream().toList();
+	}
+	
 	public List<CertificateModel> getAllCertificates() {
 		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
 			return certRepo.findAll();
+		//TODO add validation
 		if(loggedUserUtils.getLoggedInRole() == Role.CA) {
-			UserModel user = loggedUserUtils.getLoggedInUser();
-			return certRepo.findAll().stream().filter(cert -> user.getCACerts().contains(cert.getRootCertificate())).toList();
+			return getUsersCertificates(loggedUserUtils.getLoggedInUser());
 		}
 		//TODO
-		if(loggedUserUtils.getLoggedInRole() == Role.USER)
-			return certRepo.findAll()
-					.stream()
-					.filter(t -> {return (t.getOwnerUser() != null && t.getOwnerUser().getEmail().equals(loggedUserUtils.getLoggedInUser().getEmail()));}).toList();
+		if(loggedUserUtils.getLoggedInRole() == Role.USER) {
+			return getUsersCertificates(loggedUserUtils.getLoggedInUser());
+		}
 		
 		return new ArrayList<CertificateModel>();
 	}

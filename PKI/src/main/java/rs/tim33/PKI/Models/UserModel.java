@@ -40,15 +40,13 @@ public class UserModel {
     private Role role; // ADMIN, CA, USER
 
     //Only for CA users
-    //Contains the CA (self-signed) certificates that are available to this user
+    //Contains the CA certificates that are available to this user
     //The admin decides which CA certificates are available to which CA users
-    @ManyToMany
-    private Set<CertificateModel> CACerts = new HashSet<>();
+    @OneToMany
+    private Set<CertificateModel> certificates = new HashSet<>();
     
     
     //Only for regular users
-    @OneToMany(mappedBy = "ownerUser")
-    private Set<CertificateModel> certificates = new HashSet<>();
     private String organization;
     @Lob
     private byte[] keystorePasswordEncrypted;

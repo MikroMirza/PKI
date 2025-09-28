@@ -41,7 +41,7 @@ public class CertificateModel {
     private LocalDateTime notBefore;
     private LocalDateTime notAfter;
     private String organization;
-    @Column(columnDefinition = "CLOB")
+    @Lob
     private byte[] publicKey;
     @Lob
     private byte[] encryptedPrivateKey;
@@ -74,14 +74,9 @@ public class CertificateModel {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_certificate_id")
     private CertificateModel parentCertificate;
-    @ManyToOne
-    private CertificateModel rootCertificate;
     
     @OneToMany(mappedBy = "parentCertificate")
     private List<CertificateModel> childCertificates;
-    
-    @ManyToOne
-    private UserModel ownerUser;
     
     public void setValues(X509Certificate cert, CertificateModel parent) {
     	if(parent != null)
@@ -93,10 +88,6 @@ public class CertificateModel {
         setSerialNumber(cert.getSerialNumber().toString());
         
         setParentCertificate(parent);
-        if(parent != null)
-        	setRootCertificate(parent.getRootCertificate());
-        else
-        	setRootCertificate(this);
         
 		setNotBefore(LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault()));
 		setNotAfter(LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));

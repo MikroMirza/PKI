@@ -1,12 +1,17 @@
 package rs.tim33.PKI.Services;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.EntityNotFoundException;
 import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
+import rs.tim33.PKI.Models.CertificateModel;
 import rs.tim33.PKI.Models.Role;
 import rs.tim33.PKI.Models.UserModel;
+import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Repositories.UserRepository;
 import rs.tim33.PKI.Utils.KeyHelper;
 
@@ -15,6 +20,8 @@ public class UserService {
 
 	@Autowired
 	private UserRepository userRepo;
+	@Autowired
+	private CertificateRepository certRepo;
 	
 	@Autowired
 	private KeyHelper keyHelper;
@@ -57,6 +64,29 @@ public class UserService {
 		user.setKeystorePasswordEncrypted(keyHelper.generateEncryptedKeystoreKey());
 		
 		return userRepo.save(user);
+	}
+	
+	public void giveUserCertificate(Long userId, Long certId) throws BadRequestException, EntityNotFoundException {
+		UserModel user = userRepo.findById(userId).orElse(null);
+		CertificateModel cert = certRepo.findById(certId).orElse(null);
+		
+		if(user == null) throw new EntityNotFoundException("User does not exist");
+		if(cert == null) throw new EntityNotFoundException("Certificate does not exist");
+		if(user.getRole() == Role.USER) throw new BadRequestException("Regular user can't be assigned certificates");
+		
+		user.getCertificates().add(cert);
+		userRepo.save(user);
+	}
+	
+	public void removeUsersCertificate(Long userId, Long certId) throws EntityNotFoundException {
+		UserModel user = userRepo.findById(userId).orElse(null);
+		CertificateModel cert = certRepo.findById(certId).orElse(null);
+		
+		if(user == null) throw new EntityNotFoundException("User does not exist");
+		if(cert == null) throw new EntityNotFoundException("Certificate does not exist");
+		
+		user.getCertificates().remove(cert);
+		userRepo.save(user);
 	}
 	
 	private void validateArguments(String email, String password, String name, String surname, String org) {
