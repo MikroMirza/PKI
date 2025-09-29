@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.crypto.SecretKey;
@@ -51,18 +52,22 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
+import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
 import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
 import rs.tim33.PKI.Models.CertificateModel;
 import rs.tim33.PKI.Models.CertificateType;
+import rs.tim33.PKI.Models.GenerateCertificateRequest;
 import rs.tim33.PKI.Models.Role;
 import rs.tim33.PKI.Models.UserModel;
 import rs.tim33.PKI.Repositories.CertificateRepository;
+import rs.tim33.PKI.Repositories.RequestCertificateRepository;
 import rs.tim33.PKI.Repositories.UserRepository;
 import rs.tim33.PKI.Services.CRLService;
 import rs.tim33.PKI.Services.KeystoreService;
+import rs.tim33.PKI.Utils.CertificateService.KeyPairAndCert;
 
 @Service
 public class CertificateService {
@@ -83,6 +88,8 @@ public class CertificateService {
 	private CertificateRepository certRepo;
 	@Autowired 
 	private UserRepository userRepo;
+	@Autowired 
+	private RequestCertificateRepository reqRepo;
 	
 	@Autowired
 	private KeystoreService keystoreService;
@@ -429,6 +436,47 @@ public class CertificateService {
 		
 		return new ArrayList<CertificateModel>();
 	}
+
+	@Transactional
+	public CertificateModel generateCertificateFromRequest(GenerateCertificateRequestDTO dto)
+	        throws AuthenticationException, InvalidCertificateRequestException,
+	               InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
+
+
+	    CreateCertificateDTO createDto = new CreateCertificateDTO();
+	    createDto.issuerId = dto.getIssuerCertId();
+	    createDto.notBefore = dto.getNotBefore();
+	    createDto.notAfter = dto.getNotAfter();
+	    createDto.pathLenConstraint = 0;
+	    createDto.certType = CertificateType.END_ENTITY;
+
+	    createDto.subject.commonName = dto.getCommonName();
+	    createDto.subject.organization = dto.getOrganization();
+	    createDto.subject.orgUnit = dto.getOrganizationalUnit();
+	    createDto.subject.country = dto.getCountry();
+//	    createDto.subject.email = dto.getEmail();
+
+	    KeyPairAndCert kpAndCert = generateCertificate(createDto);
+
+	    CertificateModel issuer = certRepo.findById(dto.getIssuerCertId())
+	            .orElseThrow(() -> new IllegalArgumentException("Issuer not found"));
+
+	    CertificateModel certModel = new CertificateModel(kpAndCert.getCertificate(), issuer, dto.getOrganization());
+
+	    try {
+	        String orgEncrypted = keystoreService.getEncryptedKeyFromAlias(certModel.getAlias());
+	        byte[] orgDecrypted = keyHelper.decrypt(keyHelper.getMasterKey(), orgEncrypted);
+	        SecretKey orgKey = new SecretKeySpec(orgDecrypted, "AES");
+	        String privateEncrypted = keyHelper.encrypt(orgKey, kpAndCert.getKeyPair().getPrivate().getEncoded());
+	        certModel.setEncryptedPrivateKey(privateEncrypted);
+	    } catch (Exception e) {
+	        throw new CertificateGenerationException("Error encrypting private key");
+	    }
+
+	    return certRepo.save(certModel);
+	}
+
+	
 	
 	public void revokeCertificate(CertificateModel cert, RevocationReason reason) {
 	    if (cert.isRevoked())

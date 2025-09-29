@@ -25,6 +25,14 @@ export class CertificateService {
     return this.http.post(`${environment.apiHost}/api/certificates/revoked`,data)
   }
 
+    createCsrRequest(dto: CsrRequest): Observable<any> {
+    return this.http.post(`${environment.apiHost}/api/certificates/request`, dto);
+  }
+
+  issueFromRequest(requestId: number): Observable<any> {
+    return this.http.post(`${environment.apiHost}/api/certificates/issue/${requestId}`, {});
+  }
+
   downloadCertificate(certId: number, password: string) {
   this.http.post(`${environment.apiHost}/api/certificates/${certId}/download`, password, {
     responseType: 'blob'

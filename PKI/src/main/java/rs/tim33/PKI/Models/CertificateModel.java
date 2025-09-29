@@ -136,4 +136,10 @@ public class CertificateModel {
 			throw new Exception();
 		}
     }
+    public CertificateModel(X509Certificate cert, CertificateModel parent, String alias) {
+        setValues(cert, parent);
+        setAlias(alias); 
+    }
+
+    
 }

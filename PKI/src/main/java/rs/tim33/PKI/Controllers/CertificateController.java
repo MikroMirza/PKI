@@ -5,6 +5,8 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Optional;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.AuthenticationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
+import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
 import rs.tim33.PKI.DTO.Certificate.RevokedCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.SimpleCertificateDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
@@ -28,9 +32,11 @@ import rs.tim33.PKI.Exceptions.ErrorMessage;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
 import rs.tim33.PKI.Models.CertificateModel;
+import rs.tim33.PKI.Models.CertificateType;
 import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Services.KeystoreService;
 import rs.tim33.PKI.Utils.CertificateService;
+import rs.tim33.PKI.Utils.CertificateService.KeyPairAndCert;
 import rs.tim33.PKI.Utils.KeyHelper;
 import rs.tim33.PKI.Utils.RevocationReason;
 
@@ -116,6 +122,22 @@ public class CertificateController {
 	}
 
 
+	@PostMapping("/generate")
+	public ResponseEntity<?> generateCertificate(@RequestBody GenerateCertificateRequestDTO dto) {
+	    try {
+	        CertificateModel cert = certService.generateCertificateFromRequest(dto);
+	        return ResponseEntity.ok(cert);
+	    } catch (AuthenticationException e) {
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                             .body(new ErrorMessage(e.getMessage(), "AUTH_ERR"));
+	    } catch (AccessDeniedException e) {
+	        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+	                             .body(new ErrorMessage(e.getMessage(), "FORBIDDEN_ERR"));
+	    } catch (CertificateGenerationException e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                             .body(new ErrorMessage(e.getMessage(), "GEN_ERR"));
+	    }
+	}
 
 	
 	@GetMapping
