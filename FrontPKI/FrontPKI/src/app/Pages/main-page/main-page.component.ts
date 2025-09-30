@@ -12,6 +12,8 @@ import { RevokeDialogComponent } from '../../dialog/revoke-reason-dialog/revoke-
 import { ExportPasswordDialogComponent } from '../../dialog/export-password-dialog-component/export-password-dialog-component';
 import { SelectCertificate } from "../../Components/Data/select-certificate/select-certificate";
 import { CRLService } from '../../Services/crl.service';
+import { GenerateCertificateComponent } from '../generate-certificate/generate-certificate.component';
+import { GenerateCsrComponent } from '../generate-csr/generate-csr';
 
 @Component({
   selector: 'app-main-page',
@@ -86,7 +88,11 @@ exportCertificate() {
     this.certService.downloadCertificate(cert.id, password);
   });
 }
+// openCSR() {
+//   this.dialog.open(GenerateCsrComponent);
+// }
 
+  
 
 showCrl(){
   const decoder = new TextDecoder("UTF-8");

@@ -441,7 +441,8 @@ public class CertificateService {
 	public CertificateModel generateCertificateFromRequest(GenerateCertificateRequestDTO dto)
 	        throws AuthenticationException, InvalidCertificateRequestException,
 	               InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
-
+		if(loggedUserUtils.getLoggedInRole() != Role.USER)
+			throw new AccessDeniedException("Only Users can create requests");
 
 	    CreateCertificateDTO createDto = new CreateCertificateDTO();
 	    createDto.issuerId = dto.getIssuerCertId();
@@ -454,7 +455,7 @@ public class CertificateService {
 	    createDto.subject.organization = dto.getOrganization();
 	    createDto.subject.orgUnit = dto.getOrganizationalUnit();
 	    createDto.subject.country = dto.getCountry();
-//	    createDto.subject.email = dto.getEmail();
+	    createDto.subject.email = dto.getEmail();
 
 	    KeyPairAndCert kpAndCert = generateCertificate(createDto);
 

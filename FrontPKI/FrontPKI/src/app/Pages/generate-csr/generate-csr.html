@@ -1,0 +1,61 @@
+<form [formGroup]="csrForm" (ngSubmit)="submit()">
+  <h2>CSR Request</h2>
+
+  <fieldset>
+    <h4>Subject Info</h4>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Common Name</mat-label>
+      <input matInput formControlName="commonName" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Organization</mat-label>
+      <input matInput formControlName="organization" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Organizational Unit</mat-label>
+      <input matInput formControlName="organizationalUnit" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Country</mat-label>
+      <input matInput maxlength="2" formControlName="country" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email" />
+    </mat-form-field>
+  </fieldset>
+
+  <fieldset>
+    <h4>Validity</h4>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Valid From</mat-label>
+      <input matInput type="datetime-local" formControlName="notBefore" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Valid To</mat-label>
+      <input matInput type="datetime-local" formControlName="notAfter" />
+    </mat-form-field>
+  </fieldset>
+
+  <fieldset>
+    <h4>Download Protection</h4>
+    <mat-form-field appearance="outline">
+      <mat-label>Password for .p12</mat-label>
+      <input matInput type="password" formControlName="password" />
+    </mat-form-field>
+  </fieldset>
+
+  <h4 style="color: red;">{{errorMessage}}</h4>
+  <h4 style="color: blue">{{successMessage}}</h4>
+
+  <div>
+    <button mat-raised-button color="primary">Submit CSR</button>
+  </div>
+</form>
