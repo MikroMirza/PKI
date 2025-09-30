@@ -144,4 +144,14 @@ public class CertificateController {
 	public ResponseEntity<List<SimpleCertificateDTO>> getCertificates(){
 		return ResponseEntity.ok(certService.getAllCertificates().stream().map(t -> new SimpleCertificateDTO(t)).toList());
 	}
+	
+	@GetMapping("/available")
+	public ResponseEntity<List<SimpleCertificateDTO>> getAvailableCertificates(){
+		return ResponseEntity.ok(certService.getAvailableCertificates().stream().map(t -> new SimpleCertificateDTO(t)).toList());
+	}
+	
+	@GetMapping("/availableCA")
+	public ResponseEntity<List<SimpleCertificateDTO>> getAvailableCACertificates(){
+		return ResponseEntity.ok(certService.getAvailableCACertificates().stream().map(t -> new SimpleCertificateDTO(t)).toList());
+	}
 }

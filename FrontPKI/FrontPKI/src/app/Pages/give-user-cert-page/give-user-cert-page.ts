@@ -86,7 +86,7 @@ export class GiveUserCertPage {
           this.reloadSelectedUser()
       }
     })
-    this.certService.getCertificates().subscribe({
+    this.certService.getAvailableCertificates().subscribe({
       next: (data) => {this.allCerts=data; this.cd.detectChanges()}
     })
   }

@@ -14,8 +14,16 @@ export class CertificateService {
 
   constructor(private http: HttpClient) { }
 
-  getCertificates(): Observable<SimpleCertificateDTO[]>{
+  getAllCertificates(): Observable<SimpleCertificateDTO[]>{
     return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates`);
+  }
+
+  getAvailableCertificates(): Observable<SimpleCertificateDTO[]>{
+    return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates/available`);
+  }
+
+  getAvailableCACertificates(): Observable<SimpleCertificateDTO[]>{
+    return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates/availableCA`);
   }
 
   createCertificate(data: CreateCertificateDTO){

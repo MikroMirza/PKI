@@ -38,7 +38,7 @@ export class MainPageComponent {
   ngOnInit(){
     this.route.url.subscribe(() => {
         this.role = this.authService?.getRole() ?? ""
-        this.certData$ = this.certService.getCertificates()
+        this.certData$ = this.certService.getAllCertificates()
       })
   }
   logout(){

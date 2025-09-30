@@ -412,7 +412,7 @@ public class CertificateService {
 	
 	public List<CertificateModel> getUsersCertificates(UserModel user){
 		Set<CertificateModel> availableCerts = new HashSet<>();
-		List<CertificateModel> certs = user.getCertificates().stream().toList();
+		List<CertificateModel> certs = new ArrayList<CertificateModel>(user.getCertificates());
 		while(certs.size() > 0) {
 			CertificateModel cert = certs.remove(0);
 			certs.addAll(cert.getChildCertificates());
@@ -422,21 +422,50 @@ public class CertificateService {
 		return availableCerts.stream().toList();
 	}
 	
-	public List<CertificateModel> getAllCertificates() {
-		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
-			return certRepo.findAll();
-		//TODO add validation
-		if(loggedUserUtils.getLoggedInRole() == Role.CA) {
-			return getUsersCertificates(loggedUserUtils.getLoggedInUser());
+	//Returns the certificates available to the logged in user
+		public List<CertificateModel> getAllCertificates() {
+			if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
+				return certRepo.findAll();
+			if(loggedUserUtils.getLoggedInRole() == Role.CA) {
+				return getUsersCertificates(loggedUserUtils.getLoggedInUser());
+			}
+			if(loggedUserUtils.getLoggedInRole() == Role.USER) {
+				return getUsersCertificates(loggedUserUtils.getLoggedInUser());
+			}
+			
+			return new ArrayList<CertificateModel>();
 		}
-		//TODO
+	
+	//Returns the certificates available to the logged in user
+	public List<CertificateModel> getAvailableCertificates() {
+		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
+			return certRepo.findAll().stream().filter(cert -> !cert.isRevoked()).toList();
+		if(loggedUserUtils.getLoggedInRole() == Role.CA) {
+			return getUsersCertificates(loggedUserUtils.getLoggedInUser()).stream().filter(cert -> !cert.isRevoked()).toList();
+		}
 		if(loggedUserUtils.getLoggedInRole() == Role.USER) {
-			return getUsersCertificates(loggedUserUtils.getLoggedInUser());
+			return getUsersCertificates(loggedUserUtils.getLoggedInUser()).stream().filter(cert -> !cert.isRevoked()).toList();
 		}
 		
 		return new ArrayList<CertificateModel>();
 	}
 
+	//Returns the CA certificates available to the logged in user
+	public List<CertificateModel> getAvailableCACertificates() {
+		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
+			return certRepo.findAll().stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
+		//TODO add validation
+		if(loggedUserUtils.getLoggedInRole() == Role.CA) {
+			return getUsersCertificates(loggedUserUtils.getLoggedInUser()).stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
+		}
+		//TODO
+		if(loggedUserUtils.getLoggedInRole() == Role.USER) {
+			return getUsersCertificates(loggedUserUtils.getLoggedInUser()).stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
+		}
+		
+		return new ArrayList<CertificateModel>();
+	}
+	
 	@Transactional
 	public CertificateModel generateCertificateFromRequest(GenerateCertificateRequestDTO dto)
 	        throws AuthenticationException, InvalidCertificateRequestException,
