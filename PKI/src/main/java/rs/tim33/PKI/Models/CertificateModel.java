@@ -122,7 +122,7 @@ public class CertificateModel {
 		}
     }
     
-    public int GetPathLenConstraint() throws Exception {
+    public int getPathLenConstraint() {
     	CertificateFactory cf;
 		try {
 			cf = CertificateFactory.getInstance("X.509");
@@ -133,7 +133,7 @@ public class CertificateModel {
 	    	return decodedCert.getBasicConstraints();
 		} catch (CertificateException e) {
 			e.printStackTrace();
-			throw new Exception();
+			return -1;
 		}
     }
     public CertificateModel(X509Certificate cert, CertificateModel parent, String alias) {

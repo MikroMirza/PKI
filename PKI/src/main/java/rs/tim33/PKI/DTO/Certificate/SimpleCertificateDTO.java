@@ -56,7 +56,7 @@ public class SimpleCertificateDTO {
     	notAfter = cert.getNotAfter();
     	
     	try {
-			pathLen = cert.GetPathLenConstraint();
+			pathLen = cert.getPathLenConstraint();
 			isEndEntity = false;
 			if(pathLen == -1)
 				isEndEntity = true;

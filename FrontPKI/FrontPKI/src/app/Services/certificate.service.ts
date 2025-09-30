@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../env/environment';
 import { CreateCertificateDTO } from '../DTO/Certificate/CreateCertificateDTO';
 import { RevokedCertificateDTO } from '../DTO/Certificate/RevokedCertificateDTO';
+import { CsrRequest } from '../DTO/Certificate/CsrRequestDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -13,8 +14,16 @@ export class CertificateService {
 
   constructor(private http: HttpClient) { }
 
-  getCertificates(): Observable<SimpleCertificateDTO[]>{
+  getAllCertificates(): Observable<SimpleCertificateDTO[]>{
     return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates`);
+  }
+
+  getAvailableCertificates(): Observable<SimpleCertificateDTO[]>{
+    return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates/available`);
+  }
+
+  getAvailableCACertificates(): Observable<SimpleCertificateDTO[]>{
+    return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates/availableCA`);
   }
 
   createCertificate(data: CreateCertificateDTO){

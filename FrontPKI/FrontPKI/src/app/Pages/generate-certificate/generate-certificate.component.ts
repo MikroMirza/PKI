@@ -32,6 +32,11 @@ export class GenerateCertificateComponent {
     private certService: CertificateService,
     private cd: ChangeDetectorRef) {}
 
+  reloadCerts(){
+    this.certData = this.certService.getAvailableCACertificates();
+    this.cd.detectChanges();
+  }
+
   ngOnInit(): void {
     this.certificateForm = this.fb.group({
       certType: [CertType.ROOT, Validators.required],
@@ -69,9 +74,7 @@ export class GenerateCertificateComponent {
     });
 
     this.activatedRoute.url.subscribe({
-      next: () => {
-        this.certData = this.certService.getCertificates();
-      }
+      next: () => this.reloadCerts()
     })
   }
 
@@ -118,7 +121,7 @@ export class GenerateCertificateComponent {
   submit() {
     if (this.certificateForm.valid) {
       this.certService.createCertificate(this.certificateForm.value).subscribe({
-        next: (data) => {this.successMessage = "Success"; this.errorMessage = ""; this.cd.detectChanges()},
+        next: (data) => {this.successMessage = "Success"; this.errorMessage = ""; this.reloadCerts()},
         error: (err) => {this.errorMessage = err.error?.message; this.successMessage = ""; this.cd.detectChanges()}
       });
     }
