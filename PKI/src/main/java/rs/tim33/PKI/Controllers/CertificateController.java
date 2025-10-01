@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import rs.tim33.PKI.DTO.Certificate.CertificateDetailsDTO;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
 import rs.tim33.PKI.DTO.Certificate.RevokedCertificateDTO;
@@ -139,6 +140,14 @@ public class CertificateController {
 	    }
 	}
 
+	@GetMapping("/{id}")
+	public ResponseEntity<?> getCertificateDetails(@PathVariable Long id){
+		CertificateModel cert = certRepo.findById(id).orElse(null);
+		if (cert == null)
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(new CertificateDetailsDTO(cert));
+	}
 	
 	@GetMapping
 	public ResponseEntity<List<SimpleCertificateDTO>> getCertificates(){

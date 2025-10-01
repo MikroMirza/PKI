@@ -460,7 +460,7 @@ public class CertificateService {
 		}
 		//TODO
 		if(loggedUserUtils.getLoggedInRole() == Role.USER) {
-			return getUsersCertificates(loggedUserUtils.getLoggedInUser()).stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
+			return certRepo.findAll().stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
 		}
 		
 		return new ArrayList<CertificateModel>();

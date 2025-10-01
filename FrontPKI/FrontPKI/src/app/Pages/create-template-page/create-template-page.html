@@ -1,0 +1,49 @@
+<form [formGroup]="templateForm" (ngSubmit)="onSubmit()" class="p-4 flex flex-col gap-4">
+
+  <mat-form-field appearance="outline">
+    <mat-label>Template Name</mat-label>
+    <input matInput formControlName="templateName" placeholder="Enter template name">
+  </mat-form-field>
+
+  <div>
+    <h4>Available issuers</h4>
+    <app-select-certificate [certData]="(this.certData | async) || []" (onCertSelected)="onCertSelected($event)"></app-select-certificate>
+  </div>
+
+  <mat-form-field appearance="outline">
+    <mat-label>CN Regex (Optional)</mat-label>
+    <input matInput formControlName="cnRegex" placeholder="^CN=.*">
+  </mat-form-field>
+
+  <h2 class="font-semibold mt-4">SAN Settings</h2>
+  <div *ngFor="let type of sanTypes" class="flex items-center gap-2">
+    <mat-checkbox [formControlName]="type.control.replace('Regex','Enabled')">
+      {{ type.name }}
+    </mat-checkbox>
+    <mat-form-field appearance="outline" class="flex-1">
+      <mat-label>{{ type.name }} Regex (Optional)</mat-label>
+      <input matInput [formControlName]="type.control" placeholder="Regex for {{ type.name }}">
+    </mat-form-field>
+  </div>
+
+  <h2 class="font-semibold mt-4">Key Usages</h2>
+  <mat-selection-list formControlName="keyUsages">
+    <mat-list-option *ngFor="let usage of keyUsageOptions" [value]="usage">
+      {{ usage }}
+    </mat-list-option>
+  </mat-selection-list>
+
+  <h2 class="font-semibold mt-4">Extended Key Usages</h2>
+  <mat-selection-list formControlName="extKeyUsages">
+    <mat-list-option *ngFor="let ext of extKeyUsageOptions" [value]="ext">
+      {{ ext }}
+    </mat-list-option>
+  </mat-selection-list>
+
+  <mat-form-field appearance="outline">
+    <mat-label>TTL (days)</mat-label>
+    <input matInput type="number" formControlName="ttl" placeholder="0 = ignore">
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" type="submit">Save</button>
+</form>

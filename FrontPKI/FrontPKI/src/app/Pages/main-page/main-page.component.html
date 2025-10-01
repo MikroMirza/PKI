@@ -10,6 +10,9 @@
     <button *ngIf="role == 'ADMIN' || role == 'CA'" [routerLink]="['/create-certificate']">
       Create certificate
     </button>
+    <button *ngIf="role == 'ADMIN' || role == 'CA'" [routerLink]="['/create-template']">
+      Create template
+    </button>
     <button *ngIf="role == 'ADMIN'" [routerLink]="['/assign-ca']">
       Assign CA certificates
     </button>
