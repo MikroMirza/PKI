@@ -1,0 +1,46 @@
+:host{
+    display: flex;
+    flex-direction: column;
+}
+
+fieldset{
+    border: 0px;
+    display: flex;
+    flex-direction: column;
+    padding: 0px;
+    gap:10px;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    align-items: stretch;
+    width: 50%;
+    padding: 30px;
+    gap: 14px;
+    background-color: white;
+    box-shadow: 0px 0px 10px black ;
+}
+
+h2{
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+
+h4{
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+div.listing{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 8px;
+}
+
+form > div {
+    text-align: center;
+}

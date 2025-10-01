@@ -7,4 +7,5 @@ public class SubjectDTO {
 	public String country;
 	public String state;
 	public String locality;
+	public String email;
 }

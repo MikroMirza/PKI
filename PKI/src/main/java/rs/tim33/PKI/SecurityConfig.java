@@ -48,6 +48,7 @@ public class SecurityConfig {
 			.requestMatchers("/api/auth/login").permitAll()
 			.requestMatchers("/api/users/regular").permitAll()
             .requestMatchers("/api/users/verification").permitAll()
+            .requestMatchers("/api/certificates/request").hasRole("USER")
 			.anyRequest().authenticated();
 		})
 		.cors(Customizer.withDefaults())
