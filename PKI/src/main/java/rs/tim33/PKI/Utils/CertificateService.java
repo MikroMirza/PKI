@@ -256,11 +256,11 @@ public class CertificateService {
 		CertificateModel parentCert = certRepo.findById(data.issuerId).orElse(null);
 		
 		String subjectDn = "";
-		if(!data.subject.commonName.isBlank()) subjectDn += "CN=" + data.subject.commonName;
-		if(!data.subject.organization.isBlank()) subjectDn += ", O=" + data.subject.organization;
-		if(!data.subject.orgUnit.isBlank()) subjectDn += ", OU=" + data.subject.orgUnit;
-		if(!data.subject.country.isBlank()) subjectDn += ", C=" + data.subject.country;
-		if(!data.subject.locality.isBlank()) subjectDn += ", L=" + data.subject.locality;
+		if(data.subject.commonName != null && !data.subject.commonName.isBlank()) subjectDn += "CN=" + data.subject.commonName;
+		if(data.subject.organization != null && !data.subject.organization.isBlank()) subjectDn += ", O=" + data.subject.organization;
+		if(data.subject.orgUnit != null && !data.subject.orgUnit.isBlank()) subjectDn += ", OU=" + data.subject.orgUnit;
+		if(data.subject.country != null && !data.subject.country.isBlank()) subjectDn += ", C=" + data.subject.country;
+		if(data.subject.locality != null && !data.subject.locality.isBlank()) subjectDn += ", L=" + data.subject.locality;
 		X500Name subject = new X500Name(subjectDn);
         X500Name issuer;
         if(parentCert != null) issuer = new X500Name(parentCert.getSubjectDn());
