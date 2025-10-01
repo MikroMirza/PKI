@@ -53,6 +53,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
+import rs.tim33.PKI.DTO.Certificate.SubjectDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
@@ -485,7 +486,7 @@ public class CertificateService {
 	    createDto.notAfter = dto.getNotAfter();
 	    createDto.pathLenConstraint = 0;
 	    createDto.certType = CertificateType.END_ENTITY;
-
+	    createDto.subject = new SubjectDTO(); 
 	    createDto.subject.commonName = dto.getCommonName();
 	    createDto.subject.organization = dto.getOrganization();
 	    createDto.subject.orgUnit = dto.getOrganizationalUnit();

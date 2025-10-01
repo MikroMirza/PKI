@@ -35,7 +35,7 @@ export class CertificateService {
   }
 
   createCsrRequest(dto: GenerateCertificateRequestDTO): Observable<any> {
-    return this.http.post(`${environment.apiHost}/api/certificates/request`, dto);
+    return this.http.post(`${environment.apiHost}/api/certificates/generate`, dto);
   }
 
   issueFromRequest(requestId: number): Observable<any> {
