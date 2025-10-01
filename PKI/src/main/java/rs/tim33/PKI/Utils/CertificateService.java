@@ -257,11 +257,11 @@ public class CertificateService {
 		CertificateModel parentCert = certRepo.findById(data.issuerId).orElse(null);
 		
 		String subjectDn = "";
-		if(!data.subject.commonName.isBlank()) subjectDn += "CN=" + data.subject.commonName;
-		if(!data.subject.organization.isBlank()) subjectDn += ", O=" + data.subject.organization;
-		if(!data.subject.orgUnit.isBlank()) subjectDn += ", OU=" + data.subject.orgUnit;
-		if(!data.subject.country.isBlank()) subjectDn += ", C=" + data.subject.country;
-		if(!data.subject.locality.isBlank()) subjectDn += ", L=" + data.subject.locality;
+		if(data.subject.commonName != null && !data.subject.commonName.isBlank()) subjectDn += "CN=" + data.subject.commonName;
+		if(data.subject.organization != null && !data.subject.organization.isBlank()) subjectDn += ", O=" + data.subject.organization;
+		if(data.subject.orgUnit != null && !data.subject.orgUnit.isBlank()) subjectDn += ", OU=" + data.subject.orgUnit;
+		if(data.subject.country != null && !data.subject.country.isBlank()) subjectDn += ", C=" + data.subject.country;
+		if(data.subject.locality != null && !data.subject.locality.isBlank()) subjectDn += ", L=" + data.subject.locality;
 		X500Name subject = new X500Name(subjectDn);
         X500Name issuer;
         if(parentCert != null) issuer = new X500Name(parentCert.getSubjectDn());
@@ -472,26 +472,31 @@ public class CertificateService {
 	public CertificateModel generateCertificateFromRequest(GenerateCertificateRequestDTO dto)
 	        throws AuthenticationException, InvalidCertificateRequestException,
 	               InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
-		if(loggedUserUtils.getLoggedInRole() != Role.USER)
-			throw new AccessDeniedException("Only Users can create requests");
-		
-		UserModel user = utils.getLoggedInUser();
-		if(!user.getEmail().equals(dto.getEmail())) {
-			throw new ValidateArgumentsException("The email must match with your email","USER_BAD_INPUT_EMAIL");	
-		}
-		
+	    if(loggedUserUtils.getLoggedInRole() != Role.USER)
+	        throw new AccessDeniedException("Only Users can create requests");
+	    
+	    UserModel user = utils.getLoggedInUser();
+	    if(!user.getEmail().equals(dto.getEmail())) {
+	        throw new ValidateArgumentsException("The email must match with your email","USER_BAD_INPUT_EMAIL");    
+	    }
+	    
 	    CreateCertificateDTO createDto = new CreateCertificateDTO();
 	    createDto.issuerId = dto.getIssuerCertId();
 	    createDto.notBefore = dto.getNotBefore();
 	    createDto.notAfter = dto.getNotAfter();
 	    createDto.pathLenConstraint = 0;
 	    createDto.certType = CertificateType.END_ENTITY;
-	    createDto.subject = new SubjectDTO(); 
+
+	    createDto.subject = new SubjectDTO();
 	    createDto.subject.commonName = dto.getCommonName();
 	    createDto.subject.organization = dto.getOrganization();
 	    createDto.subject.orgUnit = dto.getOrganizationalUnit();
 	    createDto.subject.country = dto.getCountry();
 	    createDto.subject.email = dto.getEmail();
+
+	    createDto.san = new ArrayList<>();
+	    createDto.keyUsage = new ArrayList<>();
+	    createDto.extendedKeyUsage = new ArrayList<>();
 
 	    KeyPairAndCert kpAndCert = generateCertificate(createDto);
 
@@ -512,6 +517,7 @@ public class CertificateService {
 
 	    return certRepo.save(certModel);
 	}
+
 
 	
 	

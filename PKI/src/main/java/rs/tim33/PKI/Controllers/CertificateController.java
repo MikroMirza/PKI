@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import rs.tim33.PKI.DTO.Certificate.CertificateDetailsDTO;
+import rs.tim33.PKI.DTO.Certificate.CertificateResponseDTO;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
 import rs.tim33.PKI.DTO.Certificate.RevokedCertificateDTO;
@@ -127,7 +128,11 @@ public class CertificateController {
 	public ResponseEntity<?> generateCertificate(@RequestBody GenerateCertificateRequestDTO dto) {
 	    try {
 	        CertificateModel cert = certService.generateCertificateFromRequest(dto);
-	        return ResponseEntity.ok(cert);
+
+	        CertificateResponseDTO responseDto = new CertificateResponseDTO(cert);
+
+	        return ResponseEntity.ok(responseDto);
+
 	    } catch (AuthenticationException e) {
 	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 	                             .body(new ErrorMessage(e.getMessage(), "AUTH_ERR"));
@@ -139,6 +144,7 @@ public class CertificateController {
 	                             .body(new ErrorMessage(e.getMessage(), "GEN_ERR"));
 	    }
 	}
+
 
 	@GetMapping("/{id}")
 	public ResponseEntity<?> getCertificateDetails(@PathVariable Long id){
