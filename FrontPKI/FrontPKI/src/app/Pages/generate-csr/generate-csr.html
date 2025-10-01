@@ -1,5 +1,12 @@
 <form [formGroup]="csrForm" (ngSubmit)="submit()">
   <h2>CSR Request</h2>
+  <div>
+    <h4>Available issuers</h4>
+    <app-select-certificate 
+        [certData]="(certData | async) || []"
+        (onCertSelected)="onCertSelected($event)">
+    </app-select-certificate>
+  </div>
 
   <fieldset>
     <h4>Subject Info</h4>

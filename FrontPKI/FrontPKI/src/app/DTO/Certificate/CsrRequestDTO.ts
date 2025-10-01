@@ -1,4 +1,4 @@
-export interface CsrRequest {
+export interface GenerateCertificateRequestDTO {
   commonName: string;
   organization: string;
   organizationalUnit: string;
@@ -6,8 +6,5 @@ export interface CsrRequest {
   email: string;
   notBefore: string;
   notAfter: string; 
-<<<<<<< HEAD
+  issuerCertId: number;
 }
-=======
-}
->>>>>>> 288d3b71a7f3a2147dff8424205825e0052eef59

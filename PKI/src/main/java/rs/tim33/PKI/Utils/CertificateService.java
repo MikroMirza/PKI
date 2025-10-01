@@ -83,7 +83,8 @@ public class CertificateService {
         public KeyPair getKeyPair() { return keyPair; }
         public X509Certificate getCertificate() { return certificate; }
     }
-
+	@Autowired
+	private LoggedUserUtils utils;
 	@Autowired
 	private CertificateRepository certRepo;
 	@Autowired 
@@ -472,7 +473,12 @@ public class CertificateService {
 	               InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
 		if(loggedUserUtils.getLoggedInRole() != Role.USER)
 			throw new AccessDeniedException("Only Users can create requests");
-
+		
+		UserModel user = utils.getLoggedInUser();
+		if(!user.getEmail().equals(dto.getEmail())) {
+			throw new ValidateArgumentsException("The email must match with your email","USER_BAD_INPUT_EMAIL");	
+		}
+		
 	    CreateCertificateDTO createDto = new CreateCertificateDTO();
 	    createDto.issuerId = dto.getIssuerCertId();
 	    createDto.notBefore = dto.getNotBefore();

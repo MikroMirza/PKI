@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../env/environment';
 import { CreateCertificateDTO } from '../DTO/Certificate/CreateCertificateDTO';
 import { RevokedCertificateDTO } from '../DTO/Certificate/RevokedCertificateDTO';
-import { CsrRequest } from '../DTO/Certificate/CsrRequestDTO';
+import { GenerateCertificateRequestDTO } from '../DTO/Certificate/CsrRequestDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -34,7 +34,7 @@ export class CertificateService {
     return this.http.post(`${environment.apiHost}/api/certificates/revoked`,data)
   }
 
-  createCsrRequest(dto: CsrRequest): Observable<any> {
+  createCsrRequest(dto: GenerateCertificateRequestDTO): Observable<any> {
     return this.http.post(`${environment.apiHost}/api/certificates/request`, dto);
   }
 

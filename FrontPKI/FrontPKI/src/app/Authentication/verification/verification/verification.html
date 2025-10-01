@@ -1,9 +1,14 @@
 <div class="container">
-  <h2>Verification confirmation.</h2>
+  <h2>Verification Status</h2>
   <div class="colored-div">
-    <p>
-        Please verify your account by clicking the button below. This step is required to activate your access.
+    <p *ngIf="verified === true">
+      Your account has been successfully verified.
     </p>
-    <button class="button" (click)="onButtonClick()">Verify account</button>
+    <p *ngIf="verified === false">
+      Account verification failed. Please try again or request a new verification link.
+    </p>
+    <p *ngIf="verified === null">
+      Verifying your account...
+    </p>
   </div>
 </div>

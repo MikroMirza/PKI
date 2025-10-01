@@ -31,5 +31,12 @@ public class GlobalExceptionHandler {
                 .badRequest()
                 .body(new ErrorMessage(ex.getMessage(), "ARG_INVALID"));
     }
+    
+    @ExceptionHandler(LoginException.class)
+    public ResponseEntity<?> handleLoginException(LoginException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorMessage(ex.getMessage(), ex.getErrorCode()));
+    }
 }
 

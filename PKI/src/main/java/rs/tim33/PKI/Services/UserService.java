@@ -1,5 +1,7 @@
 package rs.tim33.PKI.Services;
 
+import java.util.List;
+
 import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -90,6 +92,12 @@ public class UserService {
 	}
 	
 	private void validateArguments(String email, String password, String name, String surname, String org) {
+		List<UserModel> users = userRepo.findAll();
+		for(UserModel u:users) {
+			if (u.getEmail().equals(email)) {
+				throw new ValidateArgumentsException("That user already exists","USER_ALREADY_EXISTS_ERROR");	
+			}
+		}
 		if (email == null) {
 			throw new ValidateArgumentsException("Email must be provided.","EMPTY_EMAIL_ERROR");
 		}

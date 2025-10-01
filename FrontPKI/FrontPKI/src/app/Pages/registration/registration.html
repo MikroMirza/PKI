@@ -1,12 +1,31 @@
 <div class="container">
   <h2>Register</h2>
   <div class="colored-div">
-    <input placeholder="Email" type="email" [(ngModel)]="email">
-    <input placeholder="Name" type="text" [(ngModel)]="name">
-    <input placeholder="Surname" type="text" [(ngModel)]="surname">
-    <input placeholder="Password" type="password" [(ngModel)]="password">
-    <input placeholder="Organization" type="text" [(ngModel)]="organization">
-    <button (click)="createClicked()">Register</button>
+    <input placeholder="Email" type="email" [(ngModel)]="email" name="email"
+           [ngClass]="{'invalid': !isValidEmail(email) && emailTouched}" 
+           (blur)="emailTouched = true" (input)="emailTouched = true">
+
+    <input placeholder="Name" type="text" [(ngModel)]="name" name="name"
+           [ngClass]="{'invalid': !isValidName(name) && nameTouched}" 
+           (blur)="nameTouched = true" (input)="nameTouched = true">
+
+    <input placeholder="Surname" type="text" [(ngModel)]="surname" name="surname"
+           [ngClass]="{'invalid': !isValidSurname(surname) && surnameTouched}" 
+           (blur)="surnameTouched = true" (input)="surnameTouched = true">
+
+    <input placeholder="Password" type="password" [(ngModel)]="password" name="password"
+           [ngClass]="{'invalid': !isValidPassword(password) && passwordTouched}" 
+           (blur)="passwordTouched = true" (input)="passwordTouched = true">
+
+    <input placeholder="Confirm Password" type="password" [(ngModel)]="confirmPassword" name="confirmPassword"
+           [ngClass]="{'invalid': password !== confirmPassword && confirmPasswordTouched}" 
+           (blur)="confirmPasswordTouched = true" (input)="confirmPasswordTouched = true">
+
+    <input placeholder="Organization" type="text" [(ngModel)]="organization" name="organization"
+           [ngClass]="{'invalid': !isValidOrg(organization) && orgTouched}" 
+           (blur)="orgTouched = true" (input)="orgTouched = true">
+
+    <button (click)="createClicked()" [disabled]="!formValid()">Register</button>
   </div>
   <div class="error-message">{{ errorMessage }}</div>
 </div>
