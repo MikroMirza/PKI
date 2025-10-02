@@ -101,9 +101,9 @@ public class CertificateController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage("You must select a certificate to unrevoke first", "NO_CERT_SELECTED"));
 		}
 		CertificateModel cert = optCert.get();
-		RevocationReason reason = RevocationReason.fromCode(certDTO.getReason());
+		RevocationReason reason = cert.getRevocationReason();
 		if(reason.getCode()!=6) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage("This certificate can be unrevoked", "INCORRECT_REASONING"));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage("This certificate cannot be unrevoked", "INCORRECT_REASONING"));
 		}
 		certService.rerevokeCertificate(cert, reason);
 		return ResponseEntity.ok().build();

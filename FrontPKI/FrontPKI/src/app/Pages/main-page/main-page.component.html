@@ -3,31 +3,35 @@
   <h1 *ngIf="role === 'CA'">CA page</h1>
   <h1 *ngIf="role === 'USER'">User page</h1>
 
-  <div class="button-row">
-    <button *ngIf="role === 'ADMIN'" [routerLink]="['/users/ca/new']">
-      Create CA user
-    </button>
-    <button *ngIf="role == 'ADMIN' || role == 'CA'" [routerLink]="['/create-certificate']">
-      Create certificate
-    </button>
-    <button *ngIf="role == 'ADMIN' || role == 'CA'" [routerLink]="['/create-template']">
-      Create template
-    </button>
-    <button *ngIf="role == 'ADMIN'" [routerLink]="['/assign-ca']">
-      Assign CA certificates
-    </button>
+  <div class="navbar">
+    <button *ngIf="role === 'ADMIN'" [routerLink]="['/users/ca/new']">Create CA user</button>
+    <button *ngIf="role === 'ADMIN' || role === 'CA'" [routerLink]="['/create-certificate']">Create certificate</button>
+    <button *ngIf="role === 'ADMIN' || role === 'CA'" [routerLink]="['/create-template']">Create template</button>
+    <button *ngIf="role === 'ADMIN'" [routerLink]="['/assign-ca']">Assign CA certificates</button>
     <button *ngIf="role === 'USER'" (click)="openCsrDialog()">Request CSR</button>
-    <button *ngIf="role === 'USER'" [routerLink]="['/CSR']">Request</button>
-    <button (click)="logout()" [routerLink]="['']">Logout</button>
-    <button [disabled]="!selectedCert" (click)="exportCertificate()">Export</button>
-    <div class="button-row">
-      <button *ngIf="role === 'ADMIN' || role === 'CA'" 
-              [disabled]="selectedCert == null"
-              (click)="openRevokeDialog()">
-        Revoke Certificate
-      </button>
-    </div>
+    <button *ngIf="role === 'USER'" [routerLink]="['/CSR']">My Requests</button>
+    <button (click)="logout()">Logout</button>
   </div>
-  <button (click)="showCrl()"></button>
-  <app-select-certificate [certData]="(certData$ | async) || []" (onCertSelected)="onSelectCert($event)" style="width: 50%;"></app-select-certificate>
+
+  <div class="cert-container">
+    <app-card *ngFor="let cert of (certData$ | async) || []"
+           (click)="onSelectCert(cert)"
+              [selected]="selectedCert?.id === cert.id"
+              [revoked]="cert.isRevoked || false"
+              class="cert-card">
+
+      <app-basic-certificate-data [certData]="cert"></app-basic-certificate-data>
+
+      <div class="cert-actions" *ngIf="role === 'ADMIN' || role === 'CA'">
+        <button *ngIf="!cert.isRevoked" (click)="openRevokeDialog(cert)">Revoke</button>
+        <button *ngIf="cert.isRevoked" (click)="unrevokeSelectedCert(cert)">Unrevoke</button>
+        <button (click)="openCertDetails(cert); $event.stopPropagation()">View Details</button>
+      </div>
+    </app-card>
+  </div>
+
+  <div class="button-row">
+    <button [disabled]="!selectedCert" (click)="exportCertificate()">Export</button>
+    <button (click)="showCrl()">Show CRL</button>
+  </div>
 </div>

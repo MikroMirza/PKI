@@ -1,38 +1,35 @@
 <div class="container">
   <h2>Create CA User</h2>
-  <form class="form" (ngSubmit)="createClicked()">
-    <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Email</mat-label>
-      <input matInput type="email" [(ngModel)]="email" name="email" required />
-    </mat-form-field>
+  <div class="colored-div">
 
-    <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Name</mat-label>
-      <input matInput type="text" [(ngModel)]="name" name="name" required />
-    </mat-form-field>
+    <input placeholder="Email" type="email" [(ngModel)]="email" name="email"
+           [ngClass]="{'invalid': !isValidEmail(email) && emailTouched}" 
+           (blur)="emailTouched = true" (input)="emailTouched = true">
 
-    <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Surname</mat-label>
-      <input matInput type="text" [(ngModel)]="surname" name="surname" required />
-    </mat-form-field>
+    <input placeholder="Name" type="text" [(ngModel)]="name" name="name"
+           [ngClass]="{'invalid': !isValidName(name) && nameTouched}" 
+           (blur)="nameTouched = true" (input)="nameTouched = true">
 
-    <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Password</mat-label>
-      <input matInput [type]="hidePassword ? 'password' : 'text'" [(ngModel)]="password" name="password" required />
-      <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
-        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-      </button>
-    </mat-form-field>
+    <input placeholder="Surname" type="text" [(ngModel)]="surname" name="surname"
+           [ngClass]="{'invalid': !isValidSurname(surname) && surnameTouched}" 
+           (blur)="surnameTouched = true" (input)="surnameTouched = true">
 
-    <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Organization</mat-label>
-      <input matInput type="text" [(ngModel)]="organization" name="organization" />
-    </mat-form-field>
+      <input placeholder="Password" [type]="hidePassword ? 'password' : 'text'" 
+             [(ngModel)]="password" name="password"
+             [ngClass]="{'invalid': !isValidPassword(password) && passwordTouched}" 
+             (blur)="passwordTouched = true" (input)="passwordTouched = true">
 
-    <div class="actions">
-      <button mat-flat-button color="primary" type="submit">Create</button>
-    </div>
-  </form>
+      <input placeholder="Confirm Password" [type]="hideConfirm ? 'password' : 'text'" 
+             [(ngModel)]="confirmPassword" name="confirmPassword"
+             [ngClass]="{'invalid': password !== confirmPassword && confirmPasswordTouched}" 
+             (blur)="confirmPasswordTouched = true" (input)="confirmPasswordTouched = true">
 
-  <mat-error *ngIf="errorMessage" class="error-message">{{ errorMessage }}</mat-error>
+    <input placeholder="Organization" type="text" [(ngModel)]="organization" name="organization"
+           [ngClass]="{'invalid': !isValidOrg(organization) && orgTouched}" 
+           (blur)="orgTouched = true" (input)="orgTouched = true">
+
+    <button (click)="createClicked()" [disabled]="!formValid()">Create CA User</button>
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
 </div>
