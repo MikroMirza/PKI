@@ -620,14 +620,15 @@ public class CertificateService {
 	public CertificateModel generateCertificateFromRequest(GenerateCertificateRequestDTO dto)
 	        throws AuthenticationException, InvalidCertificateRequestException,
 	               InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
-	    if(loggedUserUtils.getLoggedInRole() != Role.USER)
+
+	    if (loggedUserUtils.getLoggedInRole() != Role.USER)
 	        throw new AccessDeniedException("Only Users can create requests");
-	    
+
 	    UserModel user = utils.getLoggedInUser();
-	    if(!user.getEmail().equals(dto.getEmail())) {
-	        throw new ValidateArgumentsException("The email must match with your email","USER_BAD_INPUT_EMAIL");    
+	    if (!user.getEmail().equals(dto.getEmail())) {
+	        throw new ValidateArgumentsException("The email must match with your email", "USER_BAD_INPUT_EMAIL");    
 	    }
-	    
+
 	    CreateCertificateDTO createDto = new CreateCertificateDTO();
 	    createDto.issuerId = dto.getIssuerCertId();
 	    createDto.notBefore = dto.getNotBefore();
@@ -665,6 +666,8 @@ public class CertificateService {
 
 	    return certRepo.save(certModel);
 	}
+
+
 
 
 	
@@ -738,7 +741,6 @@ public class CertificateService {
 				return true;
 		}
 		return false;
-	
 	
 	}
 }
