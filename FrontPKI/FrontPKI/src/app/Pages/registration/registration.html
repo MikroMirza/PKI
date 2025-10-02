@@ -15,7 +15,8 @@
 
     <input placeholder="Password" type="password" [(ngModel)]="password" name="password"
            [ngClass]="{'invalid': !isValidPassword(password) && passwordTouched}" 
-           (blur)="passwordTouched = true" (input)="passwordTouched = true">
+           (blur)="passwordTouched = true" (input)="checkPassStrength()">
+           <span>{{passStrength}}</span>
 
     <input placeholder="Confirm Password" type="password" [(ngModel)]="confirmPassword" name="confirmPassword"
            [ngClass]="{'invalid': password !== confirmPassword && confirmPasswordTouched}" 
