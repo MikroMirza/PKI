@@ -17,7 +17,7 @@
       <input placeholder="Password" [type]="hidePassword ? 'password' : 'text'" 
              [(ngModel)]="password" name="password"
              [ngClass]="{'invalid': !isValidPassword(password) && passwordTouched}" 
-             (blur)="passwordTouched = true" (input)="passwordTouched = true">
+             (blur)="passwordTouched = true" (input)="checkPassStrength()">
            <span>{{passStrength}}</span>
 
       <input placeholder="Confirm Password" [type]="hideConfirm ? 'password' : 'text'" 

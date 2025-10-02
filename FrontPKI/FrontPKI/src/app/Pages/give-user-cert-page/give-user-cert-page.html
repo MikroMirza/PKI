@@ -13,6 +13,7 @@
             <mat-panel-title> Available certificates </mat-panel-title>
             <mat-panel-description> Certificates you can assign to users </mat-panel-description>
         </mat-expansion-panel-header>
+        <br/>
         <app-select-certificate [certData]="allCerts || []" (onCertSelected)="availableCertSelected($event)"/>
         <div *ngIf="allCerts.length == 0">No certificates available.</div> <br/>
         <button matButton="outlined" [disabled]="selected == null || selectedAllCert == null" (click)="addClicked()">Add certificate</button>
@@ -25,6 +26,7 @@
             <mat-panel-title> Assigned certificates </mat-panel-title>
             <mat-panel-description> Certificates assigned to the selected user </mat-panel-description>
         </mat-expansion-panel-header>
+        <br/>
         <app-select-certificate [certData]="selected?.certs || []" (onCertSelected)="userCertSelected($event)"/>
         <div *ngIf="selected == null">Select a user first.</div>
         <div *ngIf="selected?.certs?.length == 0">No certificates assigned.</div>

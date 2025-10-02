@@ -43,7 +43,7 @@ export class GiveUserCertPage {
       return;
 
     this.userService.giveUserCertificate(this.selected?.id, this.selectedAllCert?.id).subscribe({
-      complete: () => {this.reloadData(); this.selectedAllCert = null}
+      complete: () => {this.reloadData(); this.selectedAllCert = null; this.cd.detectChanges()}
     })
   }
 
@@ -56,7 +56,7 @@ export class GiveUserCertPage {
       return;
 
     this.userService.removeUsersCertificate(this.selected?.id, this.selectedUserCert?.id).subscribe({
-      complete: () => {this.reloadData(); this.selectedUserCert = null}
+      complete: () => {this.reloadData(); this.selectedUserCert = null; this.cd.detectChanges()}
     })
   }
 
@@ -83,9 +83,9 @@ export class GiveUserCertPage {
     this.userService.getUsers().subscribe({
       next: (data) => {
         this.userList=data;
-        this.cd.detectChanges()
         if(this.selectedUserId != null)
           this.reloadSelectedUser()
+        this.cd.detectChanges()
       }
     })
     this.certService.getAvailableCertificates().subscribe({
