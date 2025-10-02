@@ -1,25 +1,25 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../../Authentication/auth.service';
-import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
-import { filter, Observable } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
 import { CertificateService } from '../../Services/certificate.service';
-import { CertificateTableComponent } from "../../Components/Data/certificate-table/certificate-table.component";
 import { MatDialog } from '@angular/material/dialog';
 import { RevokeDialogComponent } from '../../dialog/revoke-reason-dialog/revoke-reason-dialog';
 import { ExportPasswordDialogComponent } from '../../dialog/export-password-dialog-component/export-password-dialog-component';
-import { SelectCertificate } from "../../Components/Data/select-certificate/select-certificate";
 import { CRLService } from '../../Services/crl.service';
-import { GenerateCertificateComponent } from '../generate-certificate/generate-certificate.component';
-import { GenerateCsrComponent } from '../generate-csr/generate-csr';
 import { CsrDialogComponent } from '../../dialog/csr-dialog-component/csr-dialog-component';
+import { RevokedCertificateDTO } from '../../DTO/Certificate/RevokedCertificateDTO';
+import { BasicCertificateDataComponent } from "../../Components/Data/basic-certificate-data/basic-certificate-data.component";
+import { CardComponent } from "../../Components/Containers/card/card.component";
+import { CertificateInfoDialogComponent } from '../../dialog/Components/Dialogs/certificate-info-dialog/certificate-info-dialog';
 
 @Component({
   selector: 'app-main-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, RouterLink, SelectCertificate],
+  imports: [CommonModule, RouterLink, BasicCertificateDataComponent, CardComponent],
   templateUrl: './main-page.component.html',
   styleUrl: './main-page.component.css'
 })
@@ -30,78 +30,114 @@ export class MainPageComponent {
     private route: ActivatedRoute,
     private certService: CertificateService,
     private crlService: CRLService,
-    private dialog:MatDialog){}
-  selectedCert: SimpleCertificateDTO | null = null;
+    private dialog: MatDialog
+  ) {}
 
   role: String = "";
   certData$!: Observable<SimpleCertificateDTO[]>;
+  selectedCert: SimpleCertificateDTO | null = null;
 
-  ngOnInit(){
+  ngOnInit() {
     this.route.url.subscribe(() => {
-        this.role = this.authService?.getRole() ?? ""
-        this.certData$ = this.certService.getAllCertificates()
-      })
+      this.role = this.authService?.getRole() ?? "";
+      this.certData$ = this.certService.getAllCertificates();
+    });
   }
-  logout(){
+
+  logout() {
     this.authService.logout();
+    this.router.navigate(['/']);
   }
 
   onSelectCert(cert: SimpleCertificateDTO) {
     this.selectedCert = cert;
-    console.log(this.selectedCert)
   }
 
-  openRevokeDialog() {
-  console.log("GAs1")
-  if (this.selectedCert == null) return;
-
-  console.log("GAs2")
-
-  const dialogRef = this.dialog.open(RevokeDialogComponent, {
-    data: { certId: this.selectedCert.id }
-  });
-  console.log("GAs3")
-
-  dialogRef.afterClosed().subscribe((revoked: boolean) => {
-    if (revoked && this.selectedCert) {
-      this.markRevoked(this.selectedCert);
+  onUnselectCert(cert: SimpleCertificateDTO) {
+    if (this.selectedCert === cert) {
+      this.selectedCert = null;
     }
-  });
-}
-
-markRevoked(cert: SimpleCertificateDTO) {
-  cert.isRevoked = true;
-  if (cert.children) {
-    cert.children.forEach(child => this.markRevoked(child));
   }
-}
-exportCertificate() {
-  if (!this.selectedCert) return;
+  openRevokeDialog(cert: SimpleCertificateDTO) {
+    const dialogRef = this.dialog.open(RevokeDialogComponent, {
+      data: { certId: cert.id }
+    });
 
+    dialogRef.afterClosed().subscribe((revoked: boolean) => {
+      if (revoked) {
+        cert.isRevoked = true;
+      }
+    });
+  }
+
+  unrevokeSelectedCert(cert: SimpleCertificateDTO) {
+    const dto: RevokedCertificateDTO = {
+      certId: cert.id,
+      reason: 6
+    };
+
+    this.certService.rerevokeCertificate(dto).subscribe({
+      next: () => {
+        cert.isRevoked = false;
+      },
+      error: (err) => {
+        if (err.error && err.error.message) {
+          alert(err.error.message);
+        } else {
+          alert("Failed to unrevoke certificate.");
+        }
+      }
+    });
+  }
+
+  exportCertificate() {
+    if (!this.selectedCert) return;
+
+    const cert = this.selectedCert;
+    const dialogRef = this.dialog.open(ExportPasswordDialogComponent, {
+      width: '300px'
+    });
+
+    dialogRef.afterClosed().subscribe(password => {
+      if (!password) return;
+      this.certService.downloadCertificate(cert.id, password);
+    });
+  }
+
+  openCsrDialog() {
+    this.dialog.open(CsrDialogComponent, { width: '500px' });
+  }
+
+showCrl() {
+  if (!this.selectedCert) {
+    alert("Please select a certificate first.");
+    return;
+  }
   const cert = this.selectedCert;
-  const dialogRef = this.dialog.open(ExportPasswordDialogComponent, {
-    width: '300px'
+  this.crlService.getCRL(this.selectedCert.id).subscribe({
+    next: (data) => {
+      const blob = new Blob([data], { type: 'application/pkix-crl' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `crl-${cert.id}.crl`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    },
+    error: (err) => {
+        if (err.error && err.error.message) {
+          alert(err.error.message);
+        } else {
+          alert("Failed to unrevoke certificate.");
+        }
+      }
   });
-
-  dialogRef.afterClosed().subscribe(password => {
-    if (!password) return;
-
-    this.certService.downloadCertificate(cert.id, password);
-  });
 }
-openCsrDialog() {
-  this.dialog.open(CsrDialogComponent, {
-    width: '500px',
-  });
-}
+  openCertDetails(cert: SimpleCertificateDTO) {
+    this.dialog.open(CertificateInfoDialogComponent, {
+      width: '500px',
+      data: cert
+    });
+  }
 
-  
-
-showCrl(){
-  const decoder = new TextDecoder("UTF-8");
-  this.crlService.getCRL(3).subscribe({
-    next: (data) => console.log(Array.from(new Uint8Array(data)).map((b) => b.toString(16).padStart(2, "0")).join(""))
-  })
 }
-}
-

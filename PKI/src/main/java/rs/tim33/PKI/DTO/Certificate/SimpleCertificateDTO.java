@@ -64,6 +64,13 @@ public class SimpleCertificateDTO {
 			e.printStackTrace();
 		}
     	
+    	 if (cert.getChildCertificates() != null) {
+    	        this.children = cert.getChildCertificates()
+    	                            .stream()
+    	                            .map(SimpleCertificateDTO::new)
+    	                            .toList();
+    	    }
+    	
     	isRevoked = cert.isRevoked();
     }
 }

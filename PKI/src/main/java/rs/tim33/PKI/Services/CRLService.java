@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigInteger;
 
+import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
 import rs.tim33.PKI.Models.CertificateModel;
 import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Utils.CertificateService;
@@ -32,6 +33,8 @@ public class CRLService {
     public X509CRL generateCRL(Long issuerCertId) throws Exception {
         CertificateModel issuerCert = certRepo.findById(issuerCertId)
             .orElseThrow(() -> new IllegalArgumentException("Issuer not found"));
+        if(issuerCert.getPathLenConstraint()==-1)
+	        throw new ValidateArgumentsException("EE cannot give out CRLs","BAD_CRL_REQUEST");    
 
         PrivateKey issuerKey = certificateService.getPrivateKeyOfCert(issuerCertId);
 

@@ -55,9 +55,16 @@ export class RevokeDialogComponent {
         alert("Certificate revoked successfully.");
         this.dialogRef.close(true);
       },
-      error: () => alert("Failed to revoke certificate.")
+      error: (err) => {
+        if (err.error && err.error.message) {
+          alert(err.error.message);
+        } else {
+          alert("Failed to revoke certificate.");
+        }
+      }
     });
   }
+
 
   onCancel() {
     this.dialogRef.close(false);

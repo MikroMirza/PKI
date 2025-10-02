@@ -153,3 +153,53 @@ input[type="password"] {
     color: white;
     font-weight: 600;
 }
+
+.container {
+  padding: 20px;
+}
+
+.navbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.cert-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.cert-card {
+  position: relative;
+  padding: 12px;
+  border-radius: 10px;
+  background: transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.cert-card:hover {
+  transform: translateY(-5px);
+}
+
+.cert-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.cert-card:hover .cert-actions {
+  opacity: 1;
+}
+
+.button-row {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}

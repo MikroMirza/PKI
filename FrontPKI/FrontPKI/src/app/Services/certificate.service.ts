@@ -39,6 +39,10 @@ export class CertificateService {
   revokeCertificate(data:RevokedCertificateDTO){
     return this.http.post(`${environment.apiHost}/api/certificates/revoked`,data)
   }
+  
+  rerevokeCertificate(data:RevokedCertificateDTO){
+    return this.http.post(`${environment.apiHost}/api/certificates/rerevoked`,data)
+  }
 
   createCsrRequest(dto: GenerateCertificateRequestDTO): Observable<any> {
     return this.http.post(`${environment.apiHost}/api/certificates/generate`, dto);
