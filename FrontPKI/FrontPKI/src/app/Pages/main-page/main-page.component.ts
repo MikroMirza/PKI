@@ -128,7 +128,7 @@ showCrl() {
         if (err.error && err.error.message) {
           alert(err.error.message);
         } else {
-          alert("Failed to unrevoke certificate.");
+          alert("Cannot show CRL for this certificate");
         }
       }
   });
