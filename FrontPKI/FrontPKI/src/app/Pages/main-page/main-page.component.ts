@@ -114,8 +114,15 @@ showCrl() {
     return;
   }
   const cert = this.selectedCert;
-  this.crlService.getCRL(this.selectedCert.id).subscribe({
-    next: (data) => {
+  this.crlService.getCRL(cert.id).subscribe({
+    next: (data: ArrayBuffer) => {
+      const bytes = new Uint8Array(data);
+
+      const hexString = Array.from(bytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+      console.log(hexString);
+
       const blob = new Blob([data], { type: 'application/pkix-crl' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -125,14 +132,12 @@ showCrl() {
       window.URL.revokeObjectURL(url);
     },
     error: (err) => {
-        if (err.error && err.error.message) {
-          alert(err.error.message);
-        } else {
-          alert("Cannot show CRL for this certificate");
-        }
-      }
+      alert(err.error?.message || "Cannot show CRL for this certificate");
+    }
   });
 }
+
+
   openCertDetails(cert: SimpleCertificateDTO) {
     this.dialog.open(CertificateInfoDialogComponent, {
       width: '500px',
