@@ -1,7 +1,9 @@
 package rs.tim33.PKI.Controllers;
 
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.AuthenticationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,10 +24,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import rs.tim33.PKI.DTO.Certificate.CertificateDetailsDTO;
+import rs.tim33.PKI.DTO.Certificate.CertificateResponseDTO;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
+import rs.tim33.PKI.DTO.Certificate.CsrRequestDTO;
 import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
 import rs.tim33.PKI.DTO.Certificate.RevokedCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.SimpleCertificateDTO;
@@ -131,7 +138,11 @@ public class CertificateController {
 	public ResponseEntity<?> generateCertificate(@RequestBody GenerateCertificateRequestDTO dto) {
 	    try {
 	        CertificateModel cert = certService.generateCertificateFromRequest(dto);
-	        return ResponseEntity.ok(cert);
+
+	        CertificateResponseDTO responseDto = new CertificateResponseDTO(cert);
+
+	        return ResponseEntity.ok(responseDto);
+
 	    } catch (AuthenticationException e) {
 	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 	                             .body(new ErrorMessage(e.getMessage(), "AUTH_ERR"));
@@ -151,6 +162,26 @@ public class CertificateController {
 		return ResponseEntity.status(HttpStatus.OK).body(templates);
 	}
 
+	@PostMapping("/from-csr")
+	public ResponseEntity<CertificateResponseDTO> generateCertificateFromCsr(
+	        @RequestBody CsrRequestDTO request
+	) {
+	    try {
+	        CertificateModel cert = certService.generateCertificateFromCsr(
+	                request.getCsrPem(),
+	                request.getIssuerId(),
+	                request.getNotBefore(),
+	                request.getNotAfter()
+	        );
+	        CertificateResponseDTO dto = new CertificateResponseDTO(cert);
+	        return ResponseEntity.ok(dto);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+	    }
+	}
+
+
+	
 	@GetMapping("/{id}")
 	public ResponseEntity<?> getCertificateDetails(@PathVariable Long id){
 		CertificateModel cert = certRepo.findById(id).orElse(null);

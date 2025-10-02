@@ -16,6 +16,7 @@
     <button *ngIf="role == 'ADMIN'" [routerLink]="['/assign-ca']">
       Assign CA certificates
     </button>
+    <button *ngIf="role === 'USER'" (click)="openCsrDialog()">Request CSR</button>
     <button *ngIf="role === 'USER'" [routerLink]="['/CSR']">Request</button>
     <button (click)="logout()" [routerLink]="['']">Logout</button>
     <button [disabled]="!selectedCert" (click)="exportCertificate()">Export</button>

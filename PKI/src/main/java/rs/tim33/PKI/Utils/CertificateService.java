@@ -1,6 +1,7 @@
 package rs.tim33.PKI.Utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.math.BigInteger;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -9,6 +10,7 @@ import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -29,6 +31,9 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.AuthenticationException;
 
 import org.apache.coyote.BadRequestException;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.pkcs.Attribute;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.CRLDistPoint;
@@ -36,17 +41,23 @@ import org.bouncycastle.asn1.x509.DistributionPoint;
 import org.bouncycastle.asn1.x509.DistributionPointName;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -55,6 +66,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
+import rs.tim33.PKI.DTO.Certificate.SubjectDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
@@ -530,17 +542,87 @@ public class CertificateService {
 	}
 	
 	@Transactional
+	public CertificateModel generateCertificateFromCsr(String csrPem, Long issuerCertId, LocalDate notBefore, LocalDate notAfter) 
+	        throws Exception {
+	    
+	    PemReader pemReader = new PemReader(new StringReader(csrPem));
+	    PemObject pemObject = pemReader.readPemObject();
+	    PKCS10CertificationRequest csr = new PKCS10CertificationRequest(pemObject.getContent());
+
+	    X500Name subject = csr.getSubject();
+	    SubjectPublicKeyInfo pkInfo = csr.getSubjectPublicKeyInfo();
+	    PublicKey publicKey = new JcaPEMKeyConverter().getPublicKey(pkInfo);
+
+	    CertificateModel issuer = certRepo.findById(issuerCertId)
+	            .orElseThrow(() -> new IllegalArgumentException("Issuer not found"));
+
+	    X509Certificate certificate = generateFromCSR(
+	            csr, publicKey, subject, issuer, notBefore, notAfter
+	    );
+
+	    CertificateModel certModel = new CertificateModel(certificate, issuer, subject.toString());
+	    UserModel user = utils.getLoggedInUser();
+	    user.getCertificates().add(certModel);
+	    userRepo.save(user);
+	    return certRepo.save(certModel);
+	}
+	
+	private X509Certificate generateFromCSR(
+	        PKCS10CertificationRequest csr,
+	        PublicKey publicKey,
+	        X500Name subject,
+	        CertificateModel issuer,
+	        LocalDate notBefore,
+	        LocalDate notAfter
+	) throws Exception {
+	    BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
+
+	    JcaX509v3CertificateBuilder certBuilder =
+	            new JcaX509v3CertificateBuilder(
+	                    new X500Name(issuer.getSubjectDn()),
+	                    serial,
+	                    Date.from(notBefore.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+	                    Date.from(notAfter.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+	                    subject,
+	                    publicKey
+	            );
+
+	    Attribute[] attrs = csr.getAttributes();
+	    for (Attribute attr : attrs) {
+	        if (attr.getAttrType().equals(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest)) {
+	            Extensions requestedExtensions = Extensions.getInstance(attr.getAttrValues().getObjectAt(0));
+	            for (ASN1ObjectIdentifier oid : requestedExtensions.getExtensionOIDs()) {
+	                Extension ext = requestedExtensions.getExtension(oid);
+	                certBuilder.addExtension(oid, ext.isCritical(), ext.getParsedValue());
+	            }
+	        }
+	    }
+	    JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+	    certBuilder.addExtension(Extension.subjectKeyIdentifier, false,
+	            extUtils.createSubjectKeyIdentifier(publicKey));
+	    certBuilder.addExtension(Extension.authorityKeyIdentifier, false,
+	            extUtils.createAuthorityKeyIdentifier(issuer.getCertificate()));
+
+	    ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
+	            .build(getPrivateKeyOfCert(issuer.getId()));
+
+	    return new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
+	}
+
+
+	
+	@Transactional
 	public CertificateModel generateCertificateFromRequest(GenerateCertificateRequestDTO dto)
 	        throws AuthenticationException, InvalidCertificateRequestException,
 	               InvalidIssuerException, AccessDeniedException, CertificateGenerationException {
-		if(loggedUserUtils.getLoggedInRole() != Role.USER)
-			throw new AccessDeniedException("Only Users can create requests");
-		
-		UserModel user = utils.getLoggedInUser();
-		if(!user.getEmail().equals(dto.getEmail())) {
-			throw new ValidateArgumentsException("The email must match with your email","USER_BAD_INPUT_EMAIL");	
-		}
-		
+	    if(loggedUserUtils.getLoggedInRole() != Role.USER)
+	        throw new AccessDeniedException("Only Users can create requests");
+	    
+	    UserModel user = utils.getLoggedInUser();
+	    if(!user.getEmail().equals(dto.getEmail())) {
+	        throw new ValidateArgumentsException("The email must match with your email","USER_BAD_INPUT_EMAIL");    
+	    }
+	    
 	    CreateCertificateDTO createDto = new CreateCertificateDTO();
 	    createDto.issuerId = dto.getIssuerCertId();
 	    createDto.notBefore = dto.getNotBefore();
@@ -548,11 +630,16 @@ public class CertificateService {
 	    createDto.pathLenConstraint = 0;
 	    createDto.certType = CertificateType.END_ENTITY;
 
+	    createDto.subject = new SubjectDTO();
 	    createDto.subject.commonName = dto.getCommonName();
 	    createDto.subject.organization = dto.getOrganization();
 	    createDto.subject.orgUnit = dto.getOrganizationalUnit();
 	    createDto.subject.country = dto.getCountry();
 	    createDto.subject.email = dto.getEmail();
+
+	    createDto.san = new ArrayList<>();
+	    createDto.keyUsage = new ArrayList<>();
+	    createDto.extendedKeyUsage = new ArrayList<>();
 
 	    KeyPairAndCert kpAndCert = generateCertificate(createDto);
 
@@ -573,6 +660,7 @@ public class CertificateService {
 
 	    return certRepo.save(certModel);
 	}
+
 
 	
 	

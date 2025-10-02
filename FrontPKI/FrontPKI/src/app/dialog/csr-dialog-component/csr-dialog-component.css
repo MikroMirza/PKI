@@ -1,0 +1,22 @@
+.generate-button {
+  background: linear-gradient(135deg, #4cafef, #2196f3);
+  color: white;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.generate-button:hover {
+  background: linear-gradient(135deg, #2196f3, #1e88e5);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.generate-button:disabled {
+  background: #cfd8dc; 
+  color: #90a4ae;
+  cursor: not-allowed;
+  box-shadow: none;
+}

@@ -7,6 +7,7 @@ import { CreateCertificateDTO } from '../DTO/Certificate/CreateCertificateDTO';
 import { RevokedCertificateDTO } from '../DTO/Certificate/RevokedCertificateDTO';
 import { GenerateCertificateRequestDTO } from '../DTO/Certificate/CsrRequestDTO';
 import { TemplateDTO } from '../DTO/Certificate/TemplateDTO';
+import { CsrRequestDTO } from '../DTO/Certificate/CsrRequestState';
 
 @Injectable({
   providedIn: 'root'
@@ -40,11 +41,40 @@ export class CertificateService {
   }
 
   createCsrRequest(dto: GenerateCertificateRequestDTO): Observable<any> {
-    return this.http.post(`${environment.apiHost}/api/certificates/request`, dto);
+    return this.http.post(`${environment.apiHost}/api/certificates/generate`, dto);
   }
 
   issueFromRequest(requestId: number): Observable<any> {
     return this.http.post(`${environment.apiHost}/api/certificates/issue/${requestId}`, {});
+  }
+
+  createCertificateFromCsr(
+    csrFile: File,
+    issuerId: number,
+    notBefore: Date,
+    notAfter: Date
+  ): Observable<any> {
+    return new Observable(observer => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const csrPem = reader.result as string;
+
+        const dto: CsrRequestDTO = {
+          csrPem,
+          issuerId,
+          notBefore: notBefore.toISOString().split('T')[0],
+          notAfter: notAfter.toISOString().split('T')[0]
+        };
+
+        this.http.post(`${environment.apiHost}/api/certificates/from-csr`, dto)
+          .subscribe({
+            next: res => observer.next(res),
+            error: err => observer.error(err),
+            complete: () => observer.complete()
+          });
+      };
+      reader.readAsText(csrFile);
+    });
   }
 
   downloadCertificate(certId: number, password: string) {
