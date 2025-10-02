@@ -1,44 +1,41 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatError } from '@angular/material/form-field';
+import { CommonModule } from '@angular/common';
 
 import { RegisterUserDTO } from '../../DTO/User/RegisterUserDTO';
 import { UserService } from '../../Services/user.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-create-ca-user',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
-  ],
+  imports: [FormsModule, CommonModule],
   templateUrl: './create-ca-user.component.html',
   styleUrls: ['./create-ca-user.component.css']
 })
 export class CreateCaUserComponent {
-  email: string = "";
-  name: string = "";
-  surname: string = "";
-  organization: string = "";
-  password: string = "";
-  hidePassword = true;
+  email: string = '';
+  password: string = '';
+  confirmPassword: string = '';
+  name: string = '';
+  surname: string = '';
+  organization: string = '';
+  errorMessage: string = '';
 
-  errorMessage: string = "";
+  hidePassword = true;
+  hideConfirm = true;
+
+  emailTouched = false;
+  passwordTouched = false;
+  confirmPasswordTouched = false;
+  nameTouched = false;
+  surnameTouched = false;
+  orgTouched = false;
 
   constructor(private userService: UserService, private cd: ChangeDetectorRef, private router: Router) {}
 
   createClicked() {
-    let data = new RegisterUserDTO();
+    const data = new RegisterUserDTO();
     data.email = this.email;
     data.name = this.name;
     data.surname = this.surname;
@@ -55,5 +52,34 @@ export class CreateCaUserComponent {
         this.cd.detectChanges();
       }
     });
+  }
+
+  isValidEmail(val: string): boolean {
+    return /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$/.test(val);
+  }
+
+  isValidPassword(val: string): boolean {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/.test(val);
+  }
+
+  isValidName(val: string): boolean {
+    return /^[A-Za-z]{2,}$/.test(val);
+  }
+
+  isValidSurname(val: string): boolean {
+    return /^[A-Za-z]{2,}$/.test(val);
+  }
+
+  isValidOrg(val: string): boolean {
+    return /^[A-Za-z0-9\s-]{3,}$/.test(val);
+  }
+
+  formValid(): boolean {
+    return this.isValidEmail(this.email)
+      && this.isValidPassword(this.password)
+      && this.password === this.confirmPassword
+      && this.isValidName(this.name)
+      && this.isValidSurname(this.surname)
+      && this.isValidOrg(this.organization);
   }
 }

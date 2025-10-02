@@ -561,9 +561,7 @@ public class CertificateService {
 	    );
 
 	    CertificateModel certModel = new CertificateModel(certificate, issuer, subject.toString());
-	    UserModel user = utils.getLoggedInUser();
-	    user.getCertificates().add(certModel);
-	    userRepo.save(user);
+
 	    return certRepo.save(certModel);
 	}
 	

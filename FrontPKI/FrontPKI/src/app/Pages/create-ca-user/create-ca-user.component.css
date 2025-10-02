@@ -1,38 +1,109 @@
+/* Base styles */
+* {
+    font-size: 14px;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    height: 100%;
+    width: 100%;
+    background-color: #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .container {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 25px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+    width: 100%;
+    min-height: 80vh; 
+}
+
+h1, h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: var(--dreadhead-blue);
+    padding: 2%;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: 40px;
 }
 
 h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: 500;
+    font-size: 35px;
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+
+.colored-div {
+    opacity: 0.3;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    margin-bottom: 10px;
+    width: 25%;
 }
 
-.form-field {
-  width: 100%;
+p {
+    text-align: center;
+    margin-bottom: 15px;
 }
 
-.actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 90%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.button, button {
+    width: 60%;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 20px;
+    background-color: #5e5a5a; 
+    color: white;
+    font-weight: 600;
+    border: none;
+    transition: all 0.2s ease-in-out
+}
+
+.button:hover, button:hover {
+    cursor: pointer;
+    background-color: #111;
 }
 
 .error-message {
+    color: red;
+    margin-top: 15px;
+    text-align: center;
+    min-height: 20px;
+    width: 60%; 
+    word-wrap: break-word; 
+}
+
+input {
   display: block;
-  margin-top: 15px;
-  text-align: center;
-  color: #d32f2f;
-  font-size: 14px;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input.invalid {
+  border: 2px solid red;
 }
