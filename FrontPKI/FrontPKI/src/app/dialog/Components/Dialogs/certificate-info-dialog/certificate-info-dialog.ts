@@ -4,6 +4,7 @@ import { SimpleCertificateDTO } from '../../../../DTO/Certificate/SimpleCertific
 import { MatTabsModule } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
+import { CertificateDetailsDTO } from '../../../../DTO/Certificate/CertificateDetailsDTO';
 
 @Component({
   selector: 'app-certificate-info-dialog',
@@ -15,7 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
 export class CertificateInfoDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<CertificateInfoDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public cert: SimpleCertificateDTO
+    @Inject(MAT_DIALOG_DATA) public certDetails: CertificateDetailsDTO
   ) {}
 
   close() {

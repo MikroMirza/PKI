@@ -3,6 +3,7 @@ package rs.tim33.PKI.DTO.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
 
 import rs.tim33.PKI.Models.CertificateModel;
@@ -51,6 +52,28 @@ public class CertificateDetailsDTO {
 			}
 			if(keyUsageStr.equals(""))
 				extensions.add(new StringPair("Certificate Key Usage", keyUsageStr));
+			
+			List<String> eku = cert.getExtendedKeyUsage();
+			String ekuStr = "";
+			if (eku != null) {
+			    for (String oid : eku) {
+			        ekuStr += "Extended Key Usage OID: " + oid + "\n";
+			    }
+			}
+			if(ekuStr.equals(""))
+				extensions.add(new StringPair("Certificate Extended Key Usage", ekuStr));
+			
+			Collection<List<?>> sans = cert.getSubjectAlternativeNames();
+			String sansStr = "";
+			if (sans != null) {
+			    for (List<?> san : sans) {
+			        Integer type = (Integer) san.get(0);
+			        Object value = san.get(1);
+			        sansStr += "SAN (type " + type + "): " + value;
+			    }
+			}
+			if(ekuStr.equals(""))
+				extensions.add(new StringPair("Certificate Subject Alternate Name", ekuStr));
 			
 				
 		} catch (Exception e) {
