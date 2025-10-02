@@ -1,5 +1,6 @@
 package rs.tim33.PKI.DTO.Certificate;
 
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -31,9 +32,9 @@ public class CertificateDetailsDTO {
 			validity.add(new StringPair("Not After", cert.getNotAfter().toGMTString()));
 			
 			if(cert.getBasicConstraints() == -1)
-				extensions.add(new StringPair("Basic Constraings", "Not a Certificate Authority"));
+				extensions.add(new StringPair("Basic Constraints", "Not a Certificate Authority"));
 			else
-				extensions.add(new StringPair("Basic Constraings", "Is a Certificate Authority\nMaximum number of intermediate authorities: " + Integer.toString(cert.getBasicConstraints())));
+				extensions.add(new StringPair("Basic Constraints", "Is a Certificate Authority\nMaximum number of intermediate authorities: " + Integer.toString(cert.getBasicConstraints())));
 			
 			boolean[] keyUsage = cert.getKeyUsage();
 			String keyUsageStr = "";
@@ -63,17 +64,22 @@ public class CertificateDetailsDTO {
 			if(ekuStr.equals(""))
 				extensions.add(new StringPair("Certificate Extended Key Usage", ekuStr));
 			
-			Collection<List<?>> sans = cert.getSubjectAlternativeNames();
-			String sansStr = "";
+			Collection<List<?>> sans = null;
+			try {
+			    sans = cert.getSubjectAlternativeNames();
+			} catch (CertificateParsingException e) {
+			    System.out.println("Failed to parse SAN extension: " + e.getMessage());
+			}
+
 			if (sans != null) {
 			    for (List<?> san : sans) {
 			        Integer type = (Integer) san.get(0);
 			        Object value = san.get(1);
-			        sansStr += "SAN (type " + type + "): " + value;
+			        System.out.println("SAN (type " + type + "): " + value);
 			    }
+			} else {
+			    System.out.println("No SANs present in certificate");
 			}
-			if(ekuStr.equals(""))
-				extensions.add(new StringPair("Certificate Subject Alternate Name", ekuStr));
 			
 				
 		} catch (Exception e) {

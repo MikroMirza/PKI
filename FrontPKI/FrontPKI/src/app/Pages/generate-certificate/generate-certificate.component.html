@@ -25,6 +25,7 @@
       }
     </mat-select>
   </mat-form-field>
+  <button mat-button (click)="showTemplateDetails()" *ngIf="selectedTemplate != null">Template details</button>
 
   <!-- Subject -->
   <fieldset formGroupName="subject">

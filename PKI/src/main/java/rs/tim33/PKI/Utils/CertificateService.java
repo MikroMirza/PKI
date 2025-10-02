@@ -669,6 +669,7 @@ public class CertificateService {
 	        throw new CertificateGenerationException("Error encrypting private key");
 	    }
 
+	    certModel = certRepo.save(certModel);
 	    user.getCertificates().add(certModel);
 	    userRepo.save(user);
 	    

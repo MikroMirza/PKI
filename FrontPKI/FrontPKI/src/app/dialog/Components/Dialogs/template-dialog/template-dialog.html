@@ -1,0 +1,31 @@
+<h2 mat-dialog-title style="text-align: center;">Template Details</h2>
+
+<div class="data" *ngIf="templateDetails.cnRegex.trim() != ''">
+    Common Name Regex: {{templateDetails.cnRegex}}
+</div>
+
+<div class="data">
+    Required SAN: <span *ngFor="let s of templateDetails.allowedTypes">{{s}}, </span>
+</div>
+
+<div class="data" *ngIf="templateDetails.allowedTypes.includes('dns')">
+    DNS Regex: {{templateDetails.dnsRegex}}
+</div>
+<div class="data" *ngIf="templateDetails.allowedTypes.includes('uri')">
+    URI Regex: {{templateDetails.uriRegex}}
+</div>
+<div class="data" *ngIf="templateDetails.allowedTypes.includes('email')">
+    Email Regex: {{templateDetails.emailRegex}}
+</div>
+<div class="data" *ngIf="templateDetails.allowedTypes.includes('ip')">
+    IP Regex: {{templateDetails.ipRegex}}
+</div>
+<div class="data" *ngIf="templateDetails.ttl != 0">
+    TTL: {{templateDetails.ttl}}
+</div>
+
+
+
+<div mat-dialog-actions class="dialog-actions" style="text-align: center;">
+  <button mat-button color="primary" (click)="close()">Close</button>
+</div>

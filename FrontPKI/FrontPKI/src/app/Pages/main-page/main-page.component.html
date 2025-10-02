@@ -26,7 +26,6 @@
       <ng-container *ngIf="role === 'ADMIN' || role === 'USER' || role === 'CA'">
         <button *ngIf="!cert.isRevoked" (click)="openRevokeDialog(cert)">Revoke</button>
         <button *ngIf="cert.isRevoked" (click)="unrevokeSelectedCert(cert)">Unrevoke</button>
-        <button (click)="openCertDetails(cert); $event.stopPropagation()">View Details</button>
       </ng-container>
     </div>
 

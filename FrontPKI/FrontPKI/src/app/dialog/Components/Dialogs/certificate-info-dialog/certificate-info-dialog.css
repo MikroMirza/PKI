@@ -1,47 +1,37 @@
-.cert-dialog-tabs {
-  width: 100%;
-  max-width: 600px;
-}
-
-.tab-content {
-  padding: 16px 24px; 
-  line-height: 1.6; 
-  word-break: break-word;
-}
-
-mat-dialog-content, mat-dialog-container {
-  overflow: hidden; 
-}
-
-.dialog-actions {
-  justify-content: flex-end;
-  padding: 12px 24px;
-}
-
-h2[mat-dialog-title] {
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.cert-dialog-tabs {
+:host{
   display: flex;
   flex-direction: column;
-  align-items: center; 
 }
 
-.tab-content {
-  width: 100%;
-  max-width: 500px;
-  padding: 16px;
-  box-sizing: border-box;
-}
-
-.tab-content p {
-  margin: 8px 0;
-}
-
-.dialog-actions {
+.details-container {
   display: flex;
-  justify-content: center;
-  padding-bottom: 16px;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-grow: 1;
+  max-height: 300px;
+  padding: 0.5rem;
+}
+
+.detail-item {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.detail-item:hover {
+  background-color: #f0f0f0;
+}
+
+.message-box {
+  margin-top: 1rem;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fafafa;
+  max-height: 150px;
+  overflow-y: auto;
+  white-space: pre-wrap;  /* wrap text nicely */
+  word-break: break-word; /* break long strings */
 }

@@ -144,6 +144,7 @@ showCrl() {
       next: (data) => {
         this.dialog.open(CertificateInfoDialogComponent, {
           width: '500px',
+          height: '700px',
           data: data
         });
       }

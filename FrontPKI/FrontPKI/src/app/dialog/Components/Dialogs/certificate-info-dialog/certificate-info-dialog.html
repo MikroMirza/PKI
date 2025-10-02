@@ -1,12 +1,32 @@
-<h2 mat-dialog-title>Certificate Details</h2>
-<div style="display: flex;flex-direction: column;overflow: auto;">
-  <div *ngFor="let detail of certDetails.details" (click)="message = detail.value">{{detail.field}}</div>
-  <div *ngFor="let detail of certDetails.subjectPublicKeyInfo" (click)="message = detail.value">{{detail.field}}</div>
-  <div *ngFor="let detail of certDetails.validity" (click)="message = detail.value">{{detail.field}}</div>
-  <div *ngFor="let detail of certDetails.extensions" (click)="message = detail.value">{{detail.field}}</div>
+<h2 mat-dialog-title style="text-align: center;">Certificate Details</h2>
+
+<div class="details-container">
+  <div class="detail-item"
+       *ngFor="let detail of certDetails.details"
+       (click)="message = detail.value">
+    {{detail.field}}
+  </div>
+  <div class="detail-item"
+       *ngFor="let detail of certDetails.subjectPublicKeyInfo"
+       (click)="message = detail.value">
+    {{detail.field}}
+  </div>
+  <div class="detail-item"
+       *ngFor="let detail of certDetails.validity"
+       (click)="message = detail.value">
+    {{detail.field}}
+  </div>
+  <div class="detail-item"
+       *ngFor="let detail of certDetails.extensions"
+       (click)="message = detail.value">
+    {{detail.field}}
+  </div>
 </div>
 
-{{message}}
-<div mat-dialog-actions class="dialog-actions">
+<div class="message-box" *ngIf="message">
+  {{message}}
+</div>
+
+<div mat-dialog-actions class="dialog-actions" style="text-align: center;">
   <button mat-button color="primary" (click)="close()">Close</button>
 </div>

@@ -16,6 +16,8 @@ import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO
 import { MatListModule } from '@angular/material/list';
 import { TemplateDTO } from '../../DTO/Certificate/TemplateDTO';
 import { TemplateService } from '../../Services/template.service';
+import { MatDialog } from '@angular/material/dialog';
+import { TemplateDialog } from '../../dialog/Components/Dialogs/template-dialog/template-dialog';
 
 function validityValidator(maxDays: Number): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -73,8 +75,16 @@ export class GenerateCertificateComponent {
     private certService: CertificateService,
     private tempService: TemplateService,
     private router: Router,
-    private cd: ChangeDetectorRef) {}
+    private cd: ChangeDetectorRef,
+  private dialog: MatDialog) {}
 
+
+    showTemplateDetails(){
+      const dialogRef = this.dialog.open(TemplateDialog, {
+        width: '300px',
+        data: this.selectedTemplate
+      });
+    }
 
   selectedTemplate: TemplateDTO | null = null;
   tempSelectChanged(){
