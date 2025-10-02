@@ -378,7 +378,6 @@ public class CertificateService {
         try {
 			certBuilder.addExtension(Extension.basicConstraints, true, constraint);
 		} catch (CertIOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			throw new CertificateGenerationException("Error adding basic constraint");
 		}
@@ -537,7 +536,6 @@ public class CertificateService {
 		if(loggedUserUtils.getLoggedInRole() == Role.CA) {
 			return getUsersCertificates(loggedUserUtils.getLoggedInUser()).stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
 		}
-		//TODO
 		if(loggedUserUtils.getLoggedInRole() == Role.USER) {
 			return certRepo.findAll().stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
 		}
@@ -672,6 +670,7 @@ public class CertificateService {
 	    if (cert.isRevoked())
 	        return;
 	    UserModel user = loggedUserUtils.getLoggedInUser();
+<<<<<<< HEAD
 	    if(user.getRole() == Role.USER)
 	        throw new AccessDeniedException("Users cannot revoke the certificates");
 	    if(checkIssuer(user, cert) && user.getRole()==Role.CA)
@@ -679,6 +678,27 @@ public class CertificateService {
 	    cert.setRevoked(true);
 	    cert.setRevocationReason(reason);
 	    cert.setRevokedAt(LocalDateTime.now());
+=======
+
+//	    if(user.getRole() == Role.USER)
+//	        throw new AccessDeniedException("Users cannot revoke the certificates");
+//
+//	    if(checkIssuer(user, cert) && user.getRole() == Role.CA)
+//	        throw new AccessDeniedException("CA user can only revoke the certificates they issued");
+
+	    if(!getUsersCertificates(user).contains(cert))
+	        throw new AccessDeniedException("Users can only revoke the certificates available to them");
+	    
+	    if(cert.isRevoked()) {
+	        cert.setRevocationReason(reason);
+	        cert.setRevokedAt(LocalDateTime.now());
+	    } else {
+	        cert.setRevoked(true);
+	        cert.setRevocationReason(reason);
+	        cert.setRevokedAt(LocalDateTime.now());
+	    }
+
+>>>>>>> acb760c4e5936b17b1cfa04a9ab1c3a3ed8580c9
 	    for (CertificateModel child : cert.getChildCertificates()) {
 	        revokeCertificate(child, reason);
 	    }
