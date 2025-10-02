@@ -19,6 +19,8 @@ export class CertificateInfoDialogComponent {
     @Inject(MAT_DIALOG_DATA) public certDetails: CertificateDetailsDTO
   ) {}
 
+  message: String = "";
+
   close() {
     this.dialogRef.close();
   }

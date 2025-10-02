@@ -139,10 +139,15 @@ showCrl() {
 
 
   openCertDetails(cert: SimpleCertificateDTO) {
-    this.dialog.open(CertificateInfoDialogComponent, {
-      width: '500px',
-      data: cert
-    });
+
+    this.certService.getCertificateDetails(cert.id).subscribe({
+      next: (data) => {
+        this.dialog.open(CertificateInfoDialogComponent, {
+          width: '500px',
+          data: data
+        });
+      }
+    })
   }
 
 }
