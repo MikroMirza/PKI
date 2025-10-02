@@ -105,7 +105,7 @@ public class CertificateController {
 		if(reason.getCode()!=6) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorMessage("This certificate cannot be unrevoked", "INCORRECT_REASONING"));
 		}
-		certService.rerevokeCertificate(cert, reason);
+		certService.rerevokeCertificate(cert);
 		return ResponseEntity.ok().build();
     }
 	
