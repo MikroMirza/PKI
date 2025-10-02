@@ -209,7 +209,8 @@ public class CertificateService {
 			String org,
 			String orgUnit,
 			LocalDateTime notBefore,
-			LocalDateTime notAfter
+			LocalDateTime notAfter,
+			int pathLenConstraint
 			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException {
 		validateGeneralData(cn, org, orgUnit, notBefore, notAfter);
 		
@@ -226,12 +227,16 @@ public class CertificateService {
 		//If the issuing certificate has expired
 		if(parentCert.getNotAfter().isBefore(LocalDateTime.now()))
 			throw new InvalidIssuerException("The issuing certificate has expired");
-		//TODO: CHECK PARENT EXTENSIONS
-		//CHECK IF IT BELONGS TO CA
-		//BASIC CONSTRAINT AND STUFF
 		
-		//Check CA user stuff
 		UserModel user = loggedUserUtils.getLoggedInUser();
+		if(user != null && user.getRole() == Role.CA) {
+			if(!getUsersCertificates(user).contains(parentCert))
+				throw new InvalidCertificateRequestException("Certificate is unavailable for this user");
+		}
+		
+		if(pathLenConstraint >= parentCert.getPathLenConstraint())
+			throw new InvalidCertificateRequestException("Path len must be lower than the issuing certificate's");
+		
 	}
 	
 	private void validateRootCertData(
@@ -260,7 +265,7 @@ public class CertificateService {
 			LocalDateTime notAfter,
 			int pathLenConstraint
 			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException {
-		validateNonSelfIssuedCertData(issuerId, cn, org, orgUnit, notBefore, notAfter);
+		validateNonSelfIssuedCertData(issuerId, cn, org, orgUnit, notBefore, notAfter, pathLenConstraint);
 		
 		if (pathLenConstraint < 0)
 			throw new InvalidCertificateRequestException("Path len can't be negative");
@@ -278,7 +283,7 @@ public class CertificateService {
 			LocalDateTime notBefore,
 			LocalDateTime notAfter
 			) throws AuthenticationException, InvalidIssuerException, InvalidCertificateRequestException, AccessDeniedException {
-		validateNonSelfIssuedCertData(issuerId, cn, org, orgUnit, notBefore, notAfter);
+		validateNonSelfIssuedCertData(issuerId, cn, org, orgUnit, notBefore, notAfter, -1);
 	}
 	
 	public int generateKeyUsageBits(Iterable<String> keys) {
@@ -529,7 +534,6 @@ public class CertificateService {
 	public List<CertificateModel> getAvailableCACertificates() {
 		if(loggedUserUtils.getLoggedInRole() == Role.ADMIN)
 			return certRepo.findAll().stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
-		//TODO add validation
 		if(loggedUserUtils.getLoggedInRole() == Role.CA) {
 			return getUsersCertificates(loggedUserUtils.getLoggedInUser()).stream().filter(cert -> cert.getPathLenConstraint() != -1).filter(cert -> !cert.isRevoked()).toList();
 		}

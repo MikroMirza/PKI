@@ -16,8 +16,9 @@
   </mat-form-field>
 
   <h2 class="font-semibold mt-4">SAN Settings</h2>
+  <h4>Check the SAN types that are required.</h4>
   <div *ngFor="let type of sanTypes" class="flex items-center gap-2">
-    <mat-checkbox [formControlName]="type.control.replace('Regex','Enabled')">
+    <mat-checkbox  style="margin-right: 30px;" [formControlName]="type.control.replace('Regex','Enabled')">
       {{ type.name }}
     </mat-checkbox>
     <mat-form-field appearance="outline" class="flex-1">

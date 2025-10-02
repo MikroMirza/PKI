@@ -8,10 +8,11 @@ import { SelectCertificate } from "../../Components/Data/select-certificate/sele
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
 import { CertificateService } from '../../Services/certificate.service';
 import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @Component({
   selector: 'app-give-user-cert-page',
-  imports: [MatSelectModule, CommonModule, SelectCertificate, MatButtonModule],
+  imports: [MatSelectModule, CommonModule, SelectCertificate, MatButtonModule, MatExpansionModule],
   templateUrl: './give-user-cert-page.html',
   styleUrl: './give-user-cert-page.css'
 })
@@ -42,7 +43,7 @@ export class GiveUserCertPage {
       return;
 
     this.userService.giveUserCertificate(this.selected?.id, this.selectedAllCert?.id).subscribe({
-      complete: () => {this.reloadData(); this.selectedAllCert = null}
+      complete: () => {this.reloadData(); this.selectedAllCert = null; this.cd.detectChanges()}
     })
   }
 
@@ -55,13 +56,14 @@ export class GiveUserCertPage {
       return;
 
     this.userService.removeUsersCertificate(this.selected?.id, this.selectedUserCert?.id).subscribe({
-      complete: () => {this.reloadData(); this.selectedUserCert = null}
+      complete: () => {this.reloadData(); this.selectedUserCert = null; this.cd.detectChanges()}
     })
   }
 
   reloadSelectedUser(){
     console.log("Reload user")
 
+    this.selected = null;
     if(this.selectedUserId == null)
       return
 
@@ -81,9 +83,9 @@ export class GiveUserCertPage {
     this.userService.getUsers().subscribe({
       next: (data) => {
         this.userList=data;
-        this.cd.detectChanges()
         if(this.selectedUserId != null)
           this.reloadSelectedUser()
+        this.cd.detectChanges()
       }
     })
     this.certService.getAvailableCertificates().subscribe({
