@@ -6,6 +6,7 @@ import { environment } from '../env/environment';
 import { CreateCertificateDTO } from '../DTO/Certificate/CreateCertificateDTO';
 import { RevokedCertificateDTO } from '../DTO/Certificate/RevokedCertificateDTO';
 import { GenerateCertificateRequestDTO } from '../DTO/Certificate/CsrRequestDTO';
+import { TemplateDTO } from '../DTO/Certificate/TemplateDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,10 @@ import { GenerateCertificateRequestDTO } from '../DTO/Certificate/CsrRequestDTO'
 export class CertificateService {
 
   constructor(private http: HttpClient) { }
+
+  getCertificateTemplates(id: number){
+    return this.http.get<TemplateDTO[]>(`${environment.apiHost}/api/certificates/${id}/templates`);
+  }
 
   getAllCertificates(): Observable<SimpleCertificateDTO[]>{
     return this.http.get<SimpleCertificateDTO[]>(`${environment.apiHost}/api/certificates`);

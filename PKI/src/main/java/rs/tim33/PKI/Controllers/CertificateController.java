@@ -28,12 +28,14 @@ import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
 import rs.tim33.PKI.DTO.Certificate.RevokedCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.SimpleCertificateDTO;
+import rs.tim33.PKI.DTO.Certificate.TemplateDTO;
 import rs.tim33.PKI.Exceptions.CertificateGenerationException;
 import rs.tim33.PKI.Exceptions.ErrorMessage;
 import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
 import rs.tim33.PKI.Models.CertificateModel;
 import rs.tim33.PKI.Models.CertificateType;
+import rs.tim33.PKI.Repositories.CertTemplateRepository;
 import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Services.KeystoreService;
 import rs.tim33.PKI.Utils.CertificateService;
@@ -48,6 +50,8 @@ public class CertificateController {
 	private CertificateService certService;
 	@Autowired
 	private CertificateRepository certRepo;
+	@Autowired
+	private CertTemplateRepository templateRepo;
 	@Autowired
 	private KeystoreService keystoreService;
 	@Autowired
@@ -138,6 +142,13 @@ public class CertificateController {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                             .body(new ErrorMessage(e.getMessage(), "GEN_ERR"));
 	    }
+	}
+	
+	@GetMapping("/{id}/templates")
+	public ResponseEntity<?> getCertificateTemplates(@PathVariable Long id){
+		List<TemplateDTO> templates = templateRepo.findAll().stream().filter(t -> t.getTemplateOwner().getId() == id).map(t -> new TemplateDTO(t)).toList();
+		
+		return ResponseEntity.status(HttpStatus.OK).body(templates);
 	}
 
 	@GetMapping("/{id}")

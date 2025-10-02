@@ -47,9 +47,12 @@ public class CertificateTemplate {
 	//if 0 ignore it
 	private Integer ttl;
 	
+	public CertificateTemplate() {}
+	
 	public CertificateTemplate(TemplateDTO data, CertificateModel owner) {
 		this.name = data.templateName;
 		this.templateOwner = owner;
+		this.cnRegex = data.cnRegex;
 		this.allowedTypes = new ArrayList<String>(data.allowedTypes);
 		this.dnsRegex = data.dnsRegex;
 		this.ipRegex = data.ipRegex;

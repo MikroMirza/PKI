@@ -24,7 +24,7 @@ public class TemplateService {
 	@Autowired
 	private CertificateService certService;
 	
-	public void createTemplate(TemplateDTO data) {
+	public void createTemplate(TemplateDTO data) throws EntityNotFoundException{
 		CertificateModel cert = certRepo.findById(data.certId).orElseThrow(() -> new EntityNotFoundException("No certificate with that id found"));
 		
 		if(loggedUserUtils.getLoggedInRole() == Role.CA)
@@ -35,7 +35,7 @@ public class TemplateService {
 		templateRepo.save(template);
 	}
 	
-	public void deleteTemplate(Long id) {
+	public void deleteTemplate(Long id) throws EntityNotFoundException {
 		CertificateTemplate template = templateRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Template not found"));
 		
 		if(loggedUserUtils.getLoggedInRole() == Role.CA)

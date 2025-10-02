@@ -28,6 +28,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.sasl.AuthenticationException;
 
+import org.apache.coyote.BadRequestException;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.CRLDistPoint;
@@ -50,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import rs.tim33.PKI.DTO.Certificate.CreateCertificateDTO;
 import rs.tim33.PKI.DTO.Certificate.GenerateCertificateRequestDTO;
@@ -58,15 +60,18 @@ import rs.tim33.PKI.Exceptions.InvalidCertificateRequestException;
 import rs.tim33.PKI.Exceptions.InvalidIssuerException;
 import rs.tim33.PKI.Exceptions.ValidateArgumentsException;
 import rs.tim33.PKI.Models.CertificateModel;
+import rs.tim33.PKI.Models.CertificateTemplate;
 import rs.tim33.PKI.Models.CertificateType;
 import rs.tim33.PKI.Models.GenerateCertificateRequest;
 import rs.tim33.PKI.Models.Role;
 import rs.tim33.PKI.Models.UserModel;
+import rs.tim33.PKI.Repositories.CertTemplateRepository;
 import rs.tim33.PKI.Repositories.CertificateRepository;
 import rs.tim33.PKI.Repositories.RequestCertificateRepository;
 import rs.tim33.PKI.Repositories.UserRepository;
 import rs.tim33.PKI.Services.CRLService;
 import rs.tim33.PKI.Services.KeystoreService;
+import rs.tim33.PKI.Services.TemplateService;
 import rs.tim33.PKI.Utils.CertificateService.KeyPairAndCert;
 
 @Service
@@ -91,6 +96,8 @@ public class CertificateService {
 	private UserRepository userRepo;
 	@Autowired 
 	private RequestCertificateRepository reqRepo;
+	@Autowired
+	private CertTemplateRepository templateRepo;
 	
 	@Autowired
 	private KeystoreService keystoreService;
@@ -134,6 +141,54 @@ public class CertificateService {
 			
 		if(notBefore.isAfter(notAfter))
 			throw new InvalidCertificateRequestException("NotBefore must be before NotAfter");	
+	}
+	
+	private void validateTemplateData(Long templateId, CreateCertificateDTO data) throws BadRequestException, EntityNotFoundException {
+		CertificateTemplate temp = templateRepo.findById(templateId).orElseThrow(() -> new EntityNotFoundException("Template not found"));
+		CertificateModel issuer = temp.getTemplateOwner();
+		
+		if(data.issuerId != issuer.getId())
+			throw new BadRequestException("Template not available");
+		
+		//CN
+		if(temp.getCnRegex() != null && !temp.getCnRegex().isBlank() && !data.subject.commonName.matches(temp.getCnRegex()))
+			throw new BadRequestException("The given common name doesn't fit the template");
+		
+		//SAN
+		//invalid types
+		if(data.san.stream().anyMatch(t -> !temp.getAllowedTypes().contains(t.type.toLowerCase())))
+			throw new BadRequestException("The given SAN types don't fit the template");
+		
+		//missing types
+		for(String type : temp.getAllowedTypes())
+			if (data.san.stream().noneMatch(t -> t.type.toLowerCase().equals(type)))
+				throw new BadRequestException("Missing required SAN");
+		
+		//regex
+		//dns
+		if(temp.getAllowedTypes().contains("dns") &&
+			!temp.getDnsRegex().isBlank() &&
+			data.san.stream().filter(t -> t.type.toLowerCase().equals("dns")).anyMatch(t -> !t.value.matches(temp.getDnsRegex())))
+			throw new BadRequestException("The given SAN dns doesn't fit the template");
+
+		//ip
+		if(temp.getAllowedTypes().contains("ip") &&
+			!temp.getIpRegex().isBlank() &&
+			data.san.stream().filter(t -> t.type.toLowerCase().equals("ip")).anyMatch(t -> !t.value.matches(temp.getIpRegex())))
+			throw new BadRequestException("The given SAN ip doesn't fit the template");
+
+		//email
+		if(temp.getAllowedTypes().contains("email") &&
+			!temp.getEmailRegex().isBlank() &&
+			data.san.stream().filter(t -> t.type.toLowerCase().equals("email")).anyMatch(t -> !t.value.matches(temp.getEmailRegex())))
+			throw new BadRequestException("The given SAN email doesn't fit the template");
+
+		//uri
+		if(temp.getAllowedTypes().contains("uri") &&
+			!temp.getUriRegex().isBlank() &&
+			data.san.stream().filter(t -> t.type.toLowerCase().equals("uri")).anyMatch(t -> !t.value.matches(temp.getUriRegex())))
+			throw new BadRequestException("The given SAN uri doesn't fit the template");
+		
 	}
 	
 	private void validateNonSelfIssuedCertData(
@@ -240,6 +295,13 @@ public class CertificateService {
 			validateIntermediateCertData(data.issuerId, data.subject.commonName, data.subject.organization, data.subject.orgUnit, data.notBefore, data.notAfter, data.pathLenConstraint);
 		else
 			validateRootCertData(data.subject.commonName, data.subject.organization, data.subject.orgUnit, data.notBefore, data.notAfter, data.pathLenConstraint);
+		
+		if(data.templateId != 0)
+			try {
+				validateTemplateData(data.templateId, data);
+			} catch (EntityNotFoundException | BadRequestException e) {
+				throw new CertificateGenerationException(e.getMessage(), "BAD_REQUEST");
+			}
 		
 		//Generate keys
 		KeyPairGenerator keyGen;

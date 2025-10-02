@@ -1,4 +1,5 @@
 export class TemplateDTO{
+	id: Number = 0;
 	templateName: String = "";
 	certId: Number = 0;
 	

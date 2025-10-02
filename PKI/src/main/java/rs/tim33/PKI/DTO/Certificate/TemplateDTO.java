@@ -6,7 +6,8 @@ import java.util.List;
 import rs.tim33.PKI.Models.CertificateTemplate;
 
 public class TemplateDTO {
-
+	public Long id;
+	
 	public String templateName;
 	public Long certId;
 	
@@ -33,7 +34,10 @@ public class TemplateDTO {
 	//if 0 ignore it
 	public Integer ttl;
 	
+	public TemplateDTO() {}
+	
 	public TemplateDTO(CertificateTemplate template) {
+		this.id = template.getId();
 		this.templateName = template.getName();
 		this.certId = template.getTemplateOwner().getId();
 		this.cnRegex = template.getCnRegex();

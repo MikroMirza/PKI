@@ -15,6 +15,17 @@
     <app-select-certificate [certData]="(this.certData | async) || []" (onCertSelected)="onCertSelected($event)"></app-select-certificate>
   </div>
 
+  <!-- Template -->
+  <mat-form-field *ngIf="this.templates.length > 0">
+    <mat-label>Template (Optional)</mat-label>
+    <mat-select formControlName="templateId" [(ngModel)]="selectedTempId" (selectionChange)="tempSelectChanged()">
+      <mat-option [value]="0"></mat-option>
+      @for (temp of templates; track temp) {
+        <mat-option [value]="temp.id">{{temp.templateName}}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
   <!-- Subject -->
   <fieldset formGroupName="subject">
     <h2>Subject Info</h2>
@@ -77,6 +88,10 @@
     </mat-error>
   </mat-form-field>
 
+  <mat-error *ngIf="certificateForm.hasError('tooLong')">
+    Certificate validity cannot exceed {{this.selectedTemplate?.ttl}} days.
+  </mat-error>
+
   <h2>Extensions</h2>
 
   <!-- SAN -->
@@ -87,19 +102,16 @@
       <div *ngFor="let sanGroup of san.controls; let i = index" [formGroupName]="i">
         <mat-form-field appearance="outline">
           <mat-label>Type</mat-label>
-          <mat-select formControlName="type">
-            <mat-option value="DNS">DNS</mat-option>
-            <mat-option value="IP">IP</mat-option>
-            <mat-option value="EMAIL">EMAIL</mat-option>
-            <mat-option value="URI">URI</mat-option>
+          <mat-select formControlName="type" (selectionChange)="sanSelectChanged(i)">
+            <mat-option *ngFor="let type of this.allowedSANTypes" [value]="type">{{type}}</mat-option>
           </mat-select>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Value</mat-label>
           <input matInput formControlName="value" />
-          <mat-error *ngIf="sanGroup.get('value')?.hasError('required')">
-            Value is required.
+          <mat-error *ngIf="sanGroup.get('value')?.invalid">
+            {{ sanGroup.get('value')?.hasError('required') == true ? 'Required' : 'Error, check template details' }}
           </mat-error>
         </mat-form-field>
 
@@ -108,49 +120,23 @@
         </button>
       </div>
     </div>
-    <mat-error *ngIf="san.invalid && (san.dirty || san.touched)">
-      At least one SAN is required.
-    </mat-error>
   </div>
 
-  <!-- Key Usage -->
-  <div formArrayName="keyUsage">
-    <h4>Key Usage</h4>
-    <button mat-stroked-button type="button" (click)="addKeyUsage()">+ Add KeyUsage</button>
-    <div class="listing">
-      <div *ngFor="let ctrl of keyUsage.controls; let i = index">
-        <mat-form-field appearance="outline">
-          <mat-label>Usage</mat-label>
-          <input matInput [formControlName]="i" placeholder="digitalSignature, keyEncipherment..." />
-          <mat-error *ngIf="ctrl.hasError('required')">
-            KeyUsage cannot be empty.
-          </mat-error>
-        </mat-form-field>
-        <button mat-icon-button color="warn" type="button" (click)="removeKeyUsage(i)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </div>
-    </div>
-    
-    <mat-error *ngIf="keyUsage.invalid && (keyUsage.dirty || keyUsage.touched)">
-      At least one KeyUsage is required.
-    </mat-error>
-  </div>
+  <!-- Key usage -->
+  <h2 class="font-semibold mt-4">Key Usages</h2>
+  <mat-selection-list formControlName="keyUsage">
+    <mat-list-option *ngFor="let usage of keyUsageOptions" [value]="usage">
+      {{ usage }}
+    </mat-list-option>
+  </mat-selection-list>
 
-  <!-- Extended Key Usage -->
-  <div formArrayName="extendedKeyUsage">
-    <h4>Extended Key Usage</h4>
-    <button mat-stroked-button type="button" (click)="addExtendedKeyUsage()">+ Add ExtendedKeyUsage</button>
-    <div *ngFor="let ctrl of extendedKeyUsage.controls; let i = index">
-      <mat-form-field appearance="outline">
-        <mat-label>Extended Usage</mat-label>
-        <input matInput [formControlName]="i" placeholder="serverAuth, clientAuth..." />
-      </mat-form-field>
-      <button mat-icon-button color="warn" type="button" (click)="removeExtendedKeyUsage(i)">
-        <mat-icon>delete</mat-icon>
-      </button>
-    </div>
-  </div>
+  <!-- Extended Key usage -->
+  <h2 class="font-semibold mt-4">Extended Key Usages</h2>
+  <mat-selection-list formControlName="extendedKeyUsage">
+    <mat-list-option *ngFor="let ext of extKeyUsageOptions" [value]="ext">
+      {{ ext }}
+    </mat-list-option>
+  </mat-selection-list>
 
   <!-- Basic Constraints -->
   <h4 *ngIf="certificateForm.get('certType')?.value != 'END_ENTITY'">Basic Constraint</h4>

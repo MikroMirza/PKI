@@ -10,6 +10,8 @@ import { SelectCertificate } from "../../Components/Data/select-certificate/sele
 import { CertificateService } from '../../Services/certificate.service';
 import { Observable } from 'rxjs';
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
+import { TemplateService } from '../../Services/template.service';
+import { TemplateDTO } from '../../DTO/Certificate/TemplateDTO';
 
 @Component({
   selector: 'app-create-template-page',
@@ -43,12 +45,12 @@ export class CreateTemplatePage {
 
   onCertSelected(cert: SimpleCertificateDTO){
     this.selectedCert = cert;
-    this.templateForm.get("certId")?.setValue(this.selectedCert.id);
   }
 
   constructor(
     private fb: FormBuilder,
-    private certService: CertificateService
+    private certService: CertificateService,
+    private templateService: TemplateService
   ) {
     this.certData = certService.getAvailableCACertificates()
 
@@ -99,11 +101,16 @@ export class CreateTemplatePage {
   onSubmit() {
     if (this.templateForm.valid) {
       const formValue = this.templateForm.value;
+      if(this.selectedCert == null)
+        return
+
+      console.log(formValue)
 
       // Convert into DTO format
-      const dto = {
+      const dto: TemplateDTO = {
+        id: 0,
         templateName: formValue.templateName,
-        certId: formValue.certId,
+        certId: this.selectedCert?.id,
         cnRegex: formValue.cnRegex,
         allowedTypes: this.sanTypes
           .filter(t => formValue[t.control.replace('Regex', 'Enabled')])
@@ -117,7 +124,10 @@ export class CreateTemplatePage {
         ttl: formValue.ttl
       };
 
-      console.log('TemplateDTO:', dto);
+      this.templateService.createTemplate(dto).subscribe({
+        next: () => alert("Success"),
+        error: () => alert("Error")
+      })
     }
   }
 }

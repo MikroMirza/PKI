@@ -12,7 +12,7 @@ public class CreateCertificateDTO {
 	public CertificateType certType;
 	public Long issuerId;
 	public SubjectDTO subject;
-
+	public Long templateId = 0L;
 	
 	public LocalDateTime notBefore;
 	public LocalDateTime notAfter;
