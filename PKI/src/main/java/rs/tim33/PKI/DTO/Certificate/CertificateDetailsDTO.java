@@ -28,6 +28,31 @@ public class CertificateDetailsDTO {
 
 			validity.add(new StringPair("Not Before", cert.getNotBefore().toGMTString()));
 			validity.add(new StringPair("Not After", cert.getNotAfter().toGMTString()));
+			
+			if(cert.getBasicConstraints() == -1)
+				extensions.add(new StringPair("Basic Constraings", "Not a Certificate Authority"));
+			else
+				extensions.add(new StringPair("Basic Constraings", "Is a Certificate Authority\nMaximum number of intermediate authorities: " + Integer.toString(cert.getBasicConstraints())));
+			
+			boolean[] keyUsage = cert.getKeyUsage();
+			String keyUsageStr = "";
+			if (keyUsage != null) {
+			    String[] usages = {
+			        "digitalSignature", "nonRepudiation", "keyEncipherment",
+			        "dataEncipherment", "keyAgreement", "keyCertSign",
+			        "cRLSign", "encipherOnly", "decipherOnly"
+			    };
+
+			    for (int i = 0; i < keyUsage.length; i++) {
+			        if (keyUsage[i]) {
+			        	keyUsageStr += usages[i] + "\n";
+			        }
+			    }
+			}
+			if(keyUsageStr.equals(""))
+				extensions.add(new StringPair("Certificate Key Usage", keyUsageStr));
+			
+				
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
