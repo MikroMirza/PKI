@@ -92,13 +92,17 @@ public class CertificateService {
 	public static class KeyPairAndCert {
         private final KeyPair keyPair;
         private final X509Certificate certificate;
+        private final CertificateModel certificateModel;
 
-        public KeyPairAndCert(KeyPair keyPair, X509Certificate certificate) {
+        public KeyPairAndCert(KeyPair keyPair, X509Certificate certificate, CertificateModel certificateModel) {
             this.keyPair = keyPair;
             this.certificate = certificate;
+            this.certificateModel = certificateModel;
+
         }
         public KeyPair getKeyPair() { return keyPair; }
         public X509Certificate getCertificate() { return certificate; }
+        public CertificateModel getCertificateModel() {return certificateModel;}
     }
 	@Autowired
 	private LoggedUserUtils utils;
@@ -486,7 +490,7 @@ public class CertificateService {
         }
         System.out.println("VERIFIED: " + Boolean.toString(verified));
         
-		return new KeyPairAndCert(keyPair, cert);
+		return new KeyPairAndCert(keyPair, cert,certModel);
 	}
 	
 	public List<CertificateModel> getUsersCertificates(UserModel user){
@@ -657,29 +661,15 @@ public class CertificateService {
 	    CertificateModel issuer = certRepo.findById(dto.getIssuerCertId())
 	            .orElseThrow(() -> new IllegalArgumentException("Issuer not found"));
 
-	    CertificateModel certModel = new CertificateModel(kpAndCert.getCertificate(), issuer, dto.getOrganization());
-
-	    try {
-	        String orgEncrypted = keystoreService.getEncryptedKeyFromAlias(certModel.getAlias());
-	        byte[] orgDecrypted = keyHelper.decrypt(keyHelper.getMasterKey(), orgEncrypted);
-	        SecretKey orgKey = new SecretKeySpec(orgDecrypted, "AES");
-	        String privateEncrypted = keyHelper.encrypt(orgKey, kpAndCert.getKeyPair().getPrivate().getEncoded());
-	        certModel.setEncryptedPrivateKey(privateEncrypted);
-	    } catch (Exception e) {
-	        throw new CertificateGenerationException("Error encrypting private key");
-	    }
+	    CertificateModel certModel = kpAndCert.getCertificateModel();
 
 	    user.getCertificates().add(certModel);
 	    userRepo.save(user);
 	    
-	    return certRepo.save(certModel);
+	    return certModel;
 	}
 
 
-
-
-	
-	
 	public void revokeCertificate(CertificateModel cert, RevocationReason reason) {
 	    if (cert.isRevoked())
 	        return;
