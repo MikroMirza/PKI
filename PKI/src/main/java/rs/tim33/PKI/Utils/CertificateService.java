@@ -490,6 +490,9 @@ public class CertificateService {
 	}
 	
 	public List<CertificateModel> getUsersCertificates(UserModel user){
+		if(user.getRole() == Role.ADMIN)
+			return certRepo.findAll();
+		
 		Set<CertificateModel> availableCerts = new HashSet<>();
 		List<CertificateModel> certs = new ArrayList<CertificateModel>(user.getCertificates());
 		while(certs.size() > 0) {

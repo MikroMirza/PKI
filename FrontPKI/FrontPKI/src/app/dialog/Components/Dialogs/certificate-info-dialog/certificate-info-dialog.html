@@ -1,37 +1,6 @@
 <h2 mat-dialog-title>Certificate Details</h2>
 
-<mat-tab-group class="cert-dialog-tabs">
-  <mat-tab label="General">
-    <div class="tab-content">
-      <p><strong>Subject CN:</strong> {{cert.subjectCN}}</p>
-      <p><strong>Organization (O):</strong> {{cert.subjectO}}</p>
-      <p><strong>Organizational Unit (OU):</strong> {{cert.subjectOU}}</p>
-      <p><strong>Issuer CN:</strong> {{cert.issuerCN}}</p>
-      <p><strong>Issuer Organization (O):</strong> {{cert.issuerO}}</p>
-      <p><strong>Issuer Organizational Unit (OU):</strong> {{cert.issuerOU}}</p>
-      <p><strong>Public Key:</strong> <code>{{cert.publicKey}}</code></p>
-      <p><strong>Valid From:</strong> {{cert.notBefore}}</p>
-      <p><strong>Valid To:</strong> {{cert.notAfter}}</p>
-      <p><strong>End Entity:</strong> {{cert.isEndEntity ? 'Yes' : 'No'}}</p>
-    </div>
-  </mat-tab>
 
-  <mat-tab label="Extensions / Path">
-    <div class="tab-content">
-      <p><strong>Path Length:</strong> {{cert.pathLen >= 0 ? cert.pathLen : 'N/A'}}</p>
-      <p><strong>Revoked:</strong> {{cert.isRevoked ? 'Yes' : 'No'}}</p>
-
-      <div *ngIf="cert.children && cert.children.length">
-        <p><strong>Children Certificates:</strong></p>
-        <ul>
-          <li *ngFor="let child of cert.children">
-            {{child.subjectCN}} (ID: {{child.id}})
-          </li>
-        </ul>
-      </div>
-    </div>
-  </mat-tab>
-</mat-tab-group>
 
 <div mat-dialog-actions class="dialog-actions">
   <button mat-button color="primary" (click)="close()">Close</button>
