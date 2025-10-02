@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { CertType } from '../../common/CertType';
 import { SelectCertificate } from "../../Components/Data/select-certificate/select-certificate";
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CertificateService } from '../../Services/certificate.service';
 import { Observable } from 'rxjs';
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
@@ -72,6 +72,7 @@ export class GenerateCertificateComponent {
     private activatedRoute: ActivatedRoute,
     private certService: CertificateService,
     private tempService: TemplateService,
+    private router: Router,
     private cd: ChangeDetectorRef) {}
 
 
@@ -243,7 +244,7 @@ export class GenerateCertificateComponent {
   submit() {
     if (this.certificateForm.valid) {
       this.certService.createCertificate(this.certificateForm.value).subscribe({
-        next: (data) => {this.successMessage = "Success"; this.errorMessage = ""; this.reloadCerts()},
+        next: (data) => {alert("Success"); this.router.navigate(["/mainpage"]); this.reloadCerts()},
         error: (err) => {this.errorMessage = err.error?.message; this.successMessage = ""; this.cd.detectChanges()}
       });
     }

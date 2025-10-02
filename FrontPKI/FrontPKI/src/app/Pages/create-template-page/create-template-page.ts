@@ -12,6 +12,7 @@ import { Observable } from 'rxjs';
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
 import { TemplateService } from '../../Services/template.service';
 import { TemplateDTO } from '../../DTO/Certificate/TemplateDTO';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-create-template-page',
@@ -50,7 +51,8 @@ export class CreateTemplatePage {
   constructor(
     private fb: FormBuilder,
     private certService: CertificateService,
-    private templateService: TemplateService
+    private templateService: TemplateService,
+    private router: Router
   ) {
     this.certData = certService.getAvailableCACertificates()
 
@@ -125,7 +127,7 @@ export class CreateTemplatePage {
       };
 
       this.templateService.createTemplate(dto).subscribe({
-        next: () => alert("Success"),
+        next: () => {alert("Success"); this.router.navigate(['/mainpage'])},
         error: () => alert("Error")
       })
     }

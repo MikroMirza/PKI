@@ -34,6 +34,25 @@ export class CreateCaUserComponent {
 
   constructor(private userService: UserService, private cd: ChangeDetectorRef, private router: Router) {}
 
+  passStrength: String = "";
+  checkPassStrength(){
+    this.passwordTouched = true
+    let strength = 0;
+
+    if (this.password.length >= 6) strength++;
+    if (/[A-Z]/.test(this.password)) strength++;
+    if (/[0-9]/.test(this.password)) strength++;
+    if (/[^A-Za-z0-9]/.test(this.password)) strength++;
+
+    if (strength <= 1) {
+      this.passStrength = 'Weak';
+    } else if (strength === 2 || strength === 3) {
+      this.passStrength = 'Medium';
+    } else {
+      this.passStrength = 'Strong';
+    }
+  }
+
   createClicked() {
     const data = new RegisterUserDTO();
     data.email = this.email;

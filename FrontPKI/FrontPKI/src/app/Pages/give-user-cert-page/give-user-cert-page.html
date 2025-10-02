@@ -1,19 +1,34 @@
-<mat-form-field>
-    <mat-label>Select a CA user</mat-label>
-    <mat-select [(value)]="selectedUserId" (valueChange)="userChanged()">
-        <mat-option>None</mat-option>
-        <mat-option *ngFor="let user of userList" [value]="user.id">{{user.email}}</mat-option>
-    </mat-select>
-</mat-form-field>
+<div class="big-wrapper">
+    <h2>Certificate Assignment</h2>
+    <mat-form-field>
+        <mat-label>Select a CA user</mat-label>
+        <mat-select [(value)]="selectedUserId" (valueChange)="userChanged()">
+            <mat-option [value]="null">None</mat-option>
+            <mat-option *ngFor="let user of userList" [value]="user.id">{{user.email}}</mat-option>
+        </mat-select>
+    </mat-form-field>
 
-<div class="example-button-row">
-    <button matButton="outlined" [disabled]="selected == null || selectedAllCert == null" (click)="addClicked()">Add certificate</button>
-</div>
+    <mat-expansion-panel style="width: 100%; text-align: center;" hideToggle>
+        <mat-expansion-panel-header>
+            <mat-panel-title> Available certificates </mat-panel-title>
+            <mat-panel-description> Certificates you can assign to users </mat-panel-description>
+        </mat-expansion-panel-header>
+        <app-select-certificate [certData]="allCerts || []" (onCertSelected)="availableCertSelected($event)"/>
+        <div *ngIf="allCerts.length == 0">No certificates available.</div> <br/>
+        <button matButton="outlined" [disabled]="selected == null || selectedAllCert == null" (click)="addClicked()">Add certificate</button>
+    </mat-expansion-panel>
 
-<h4>All certificates</h4>
-<app-select-certificate [certData]="allCerts || []" (onCertSelected)="availableCertSelected($event)"/>
-<h4>Assigned certificates</h4>
-<app-select-certificate [certData]="selected?.certs || []" (onCertSelected)="userCertSelected($event)"/>
-<div class="example-button-row">
-    <button matButton="outlined" [disabled]="selectedUserId == null || selectedUserCert == null" (click)="removeClicked()">Remove certificate</button>
+    <br>
+    <br>
+    <mat-expansion-panel style="width: 100%; text-align: center;" hideToggle>
+        <mat-expansion-panel-header>
+            <mat-panel-title> Assigned certificates </mat-panel-title>
+            <mat-panel-description> Certificates assigned to the selected user </mat-panel-description>
+        </mat-expansion-panel-header>
+        <app-select-certificate [certData]="selected?.certs || []" (onCertSelected)="userCertSelected($event)"/>
+        <div *ngIf="selected == null">Select a user first.</div>
+        <div *ngIf="selected?.certs?.length == 0">No certificates assigned.</div>
+        <br/>
+        <button matButton="outlined" [disabled]="selectedUserId == null || selectedUserCert == null" (click)="removeClicked()">Remove certificate</button>
+    </mat-expansion-panel>    
 </div>

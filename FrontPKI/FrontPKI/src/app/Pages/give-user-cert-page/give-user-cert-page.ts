@@ -8,10 +8,11 @@ import { SelectCertificate } from "../../Components/Data/select-certificate/sele
 import { SimpleCertificateDTO } from '../../DTO/Certificate/SimpleCertificateDTO';
 import { CertificateService } from '../../Services/certificate.service';
 import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @Component({
   selector: 'app-give-user-cert-page',
-  imports: [MatSelectModule, CommonModule, SelectCertificate, MatButtonModule],
+  imports: [MatSelectModule, CommonModule, SelectCertificate, MatButtonModule, MatExpansionModule],
   templateUrl: './give-user-cert-page.html',
   styleUrl: './give-user-cert-page.css'
 })
@@ -62,6 +63,7 @@ export class GiveUserCertPage {
   reloadSelectedUser(){
     console.log("Reload user")
 
+    this.selected = null;
     if(this.selectedUserId == null)
       return
 
