@@ -568,6 +568,11 @@ public class CertificateService {
 	    );
 
 	    CertificateModel certModel = new CertificateModel(certificate, issuer, subject.toString());
+	    certModel = certRepo.save(certModel);
+	    
+	    UserModel user = loggedUserUtils.getLoggedInUser();
+	    user.getCertificates().add(certModel);
+	    userRepo.save(user);
 
 	    return certRepo.save(certModel);
 	}
@@ -664,6 +669,9 @@ public class CertificateService {
 	        throw new CertificateGenerationException("Error encrypting private key");
 	    }
 
+	    user.getCertificates().add(certModel);
+	    userRepo.save(user);
+	    
 	    return certRepo.save(certModel);
 	}
 
