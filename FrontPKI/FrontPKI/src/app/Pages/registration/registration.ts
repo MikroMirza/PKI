@@ -4,11 +4,12 @@ import { UserService } from '../../Services/user.service';
 import { Router } from '@angular/router';
 import { RegisterUserDTO } from '../../DTO/User/RegisterUserDTO';
 import { CommonModule } from '@angular/common';
+import { MatHint } from '@angular/material/form-field';
 
 @Component({
   selector: 'app-registration',
   standalone:true,
-  imports: [FormsModule,CommonModule],
+  imports: [FormsModule, CommonModule ],
   templateUrl: './registration.html',
   styleUrl: './registration.css'
 })
@@ -49,6 +50,27 @@ export class RegistrationComponent {
     }
   });
 }
+
+  passStrength: String = "";
+  checkPassStrength(){
+    this.passwordTouched = true
+    let strength = 0;
+
+    if (this.password.length >= 6) strength++;
+    if (/[A-Z]/.test(this.password)) strength++;
+    if (/[0-9]/.test(this.password)) strength++;
+    if (/[^A-Za-z0-9]/.test(this.password)) strength++;
+
+    if (strength <= 1) {
+      this.passStrength = 'Weak';
+    } else if (strength === 2 || strength === 3) {
+      this.passStrength = 'Medium';
+    } else {
+      this.passStrength = 'Strong';
+    }
+  }
+
+
   isValidEmail(val: string): boolean {
     return /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$/.test(val);
   }
