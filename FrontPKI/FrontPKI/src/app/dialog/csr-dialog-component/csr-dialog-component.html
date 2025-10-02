@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>Upload CSR & Generate Certificate</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Select Issuer Certificate</mat-label>
+    <mat-select [(ngModel)]="selectedIssuerId">
+      <mat-option *ngFor="let issuer of issuers" [value]="issuer.id">
+        {{ issuer.issuerCN }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Not Before</mat-label>
+    <input matInput [matDatepicker]="picker1" [(ngModel)]="notBefore">
+    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+    <mat-datepicker #picker1></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Not After</mat-label>
+    <input matInput [matDatepicker]="picker2" [(ngModel)]="notAfter">
+    <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+    <mat-datepicker #picker2></mat-datepicker>
+  </mat-form-field>
+
+  <input type="file" (change)="onFileSelected($event)" accept=".pem" />
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary"
+          (click)="onGenerate()"
+          [disabled]="!csrFile || !notBefore || !notAfter || !selectedIssuerId">
+    Generate
+  </button>
+</div>

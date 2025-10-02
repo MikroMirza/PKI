@@ -1,12 +1,38 @@
 <div class="container">
-  <h2>Create User</h2>
-  <div class="colored-div">
-    <input placeholder="Email" type="email" [(ngModel)]="email">
-    <input placeholder="Name" type="text" [(ngModel)]="name">
-    <input placeholder="Surname" type="text" [(ngModel)]="surname">
-    <input placeholder="Password" type="password" [(ngModel)]="password">
-    <input placeholder="Organization" type="text" [(ngModel)]="organization">
-    <button (click)="createClicked()">Create</button>
-  </div>
-  <div class="error-message">{{ errorMessage }}</div>
+  <h2>Create CA User</h2>
+  <form class="form" (ngSubmit)="createClicked()">
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" [(ngModel)]="email" name="email" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Name</mat-label>
+      <input matInput type="text" [(ngModel)]="name" name="name" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Surname</mat-label>
+      <input matInput type="text" [(ngModel)]="surname" name="surname" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Password</mat-label>
+      <input matInput [type]="hidePassword ? 'password' : 'text'" [(ngModel)]="password" name="password" required />
+      <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Organization</mat-label>
+      <input matInput type="text" [(ngModel)]="organization" name="organization" />
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-flat-button color="primary" type="submit">Create</button>
+    </div>
+  </form>
+
+  <mat-error *ngIf="errorMessage" class="error-message">{{ errorMessage }}</mat-error>
 </div>

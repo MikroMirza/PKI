@@ -14,6 +14,7 @@ import { SelectCertificate } from "../../Components/Data/select-certificate/sele
 import { CRLService } from '../../Services/crl.service';
 import { GenerateCertificateComponent } from '../generate-certificate/generate-certificate.component';
 import { GenerateCsrComponent } from '../generate-csr/generate-csr';
+import { CsrDialogComponent } from '../../dialog/csr-dialog-component/csr-dialog-component';
 
 @Component({
   selector: 'app-main-page',
@@ -88,9 +89,11 @@ exportCertificate() {
     this.certService.downloadCertificate(cert.id, password);
   });
 }
-// openCSR() {
-//   this.dialog.open(GenerateCsrComponent);
-// }
+openCsrDialog() {
+  this.dialog.open(CsrDialogComponent, {
+    width: '500px',
+  });
+}
 
   
 
