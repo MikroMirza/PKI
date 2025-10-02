@@ -670,15 +670,13 @@ public class CertificateService {
 	    if (cert.isRevoked())
 	        return;
 	    UserModel user = loggedUserUtils.getLoggedInUser();
-<<<<<<< HEAD
-	    if(user.getRole() == Role.USER)
-	        throw new AccessDeniedException("Users cannot revoke the certificates");
-	    if(checkIssuer(user, cert) && user.getRole()==Role.CA)
-	    	throw new AccessDeniedException("CA user can only revoke the certificates they issued");
+//	    if(user.getRole() == Role.USER)
+//	        throw new AccessDeniedException("Users cannot revoke the certificates");
+//	    if(checkIssuer(user, cert) && user.getRole()==Role.CA)
+//	    	throw new AccessDeniedException("CA user can only revoke the certificates they issued");
 	    cert.setRevoked(true);
 	    cert.setRevocationReason(reason);
 	    cert.setRevokedAt(LocalDateTime.now());
-=======
 
 //	    if(user.getRole() == Role.USER)
 //	        throw new AccessDeniedException("Users cannot revoke the certificates");
@@ -698,7 +696,6 @@ public class CertificateService {
 	        cert.setRevokedAt(LocalDateTime.now());
 	    }
 
->>>>>>> acb760c4e5936b17b1cfa04a9ab1c3a3ed8580c9
 	    for (CertificateModel child : cert.getChildCertificates()) {
 	        revokeCertificate(child, reason);
 	    }
@@ -707,21 +704,25 @@ public class CertificateService {
 		//TODO: Save crl to file in generate, and call generate from here - low priority who cares
 	}
 	
-	public void rerevokeCertificate(CertificateModel cert, RevocationReason reason) {
+	public void rerevokeCertificate(CertificateModel cert) {
 	    if (!cert.isRevoked())
 	        throw new AccessDeniedException("This certificate is already unrevoked");
 	    UserModel user = loggedUserUtils.getLoggedInUser();
-	    if(user.getRole() == Role.USER)
-	        throw new AccessDeniedException("Users cannot revoke the certificates");
-	    if(checkIssuer(user, cert) && user.getRole()==Role.CA)
-	    	throw new AccessDeniedException("CA user can only revoke the certificates they issued");
+//	    if(user.getRole() == Role.USER)
+//	        throw new AccessDeniedException("Users cannot revoke the certificates");
+//	    if(checkIssuer(user, cert) && user.getRole()==Role.CA)
+//	    	throw new AccessDeniedException("CA user can only revoke the certificates they issued");
+
+	    if(!getUsersCertificates(user).contains(cert))
+	        throw new AccessDeniedException("Users can only unrevoke the certificates available to them");
+
 	    cert.setRevoked(false);
-	    cert.setRevocationReason(reason);
+//	    cert.setRevocationReason(reason);
 	    cert.setRevokedAt(LocalDateTime.now());
 	    for (CertificateModel child : cert.getChildCertificates()) {
 	    	if(!child.isRevoked())
 	    		continue;
-	    	rerevokeCertificate(child, reason);
+	    	rerevokeCertificate(child);
 	    }
 
 	    certRepo.save(cert);
