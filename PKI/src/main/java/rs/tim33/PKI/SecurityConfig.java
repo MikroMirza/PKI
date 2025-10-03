@@ -3,6 +3,7 @@ package rs.tim33.PKI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -48,7 +49,18 @@ public class SecurityConfig {
 			.requestMatchers("/api/auth/login").permitAll()
 			.requestMatchers("/api/users/regular").permitAll()
             .requestMatchers("/api/users/verification").permitAll()
-            .requestMatchers("/api/certificates/request").hasRole("USER")
+            .requestMatchers(HttpMethod.POST, "/api/users/ca").hasAuthority("ADMIN")
+            .requestMatchers(HttpMethod.POST, "/api/users/*/certificates").hasAuthority("ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/users/*/certificates/**").hasAuthority("ADMIN")
+            .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ADMIN")
+            .requestMatchers(HttpMethod.GET, "/api/users/*").hasAuthority("ADMIN")
+            .requestMatchers(HttpMethod.POST, "/api/certificates/templates").hasAnyAuthority("ADMIN", "CA")
+            .requestMatchers(HttpMethod.DELETE, "/api/certificates/templates/*").hasAnyAuthority("ADMIN", "CA")
+            .requestMatchers(HttpMethod.POST, "/api/certificates/from-csr").hasAnyAuthority("USER")
+            .requestMatchers(HttpMethod.POST, "/api/certificates/generate").hasAnyAuthority("USER")
+            .requestMatchers(HttpMethod.POST, "/api/certificates").hasAnyAuthority("ADMIN", "CA")
+            .requestMatchers("/api/crl/**").permitAll()
+            .requestMatchers("/api/certificates/request").hasAuthority("USER")
 			.anyRequest().authenticated();
 		})
 		.cors(Customizer.withDefaults())

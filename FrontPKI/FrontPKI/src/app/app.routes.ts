@@ -8,15 +8,16 @@ import { GenerateCertificateComponent } from './Pages/generate-certificate/gener
 import { GiveUserCertPage } from './Pages/give-user-cert-page/give-user-cert-page';
 import { CreateTemplatePage } from './Pages/create-template-page/create-template-page';
 import { GenerateCsrComponent } from './Pages/generate-csr/generate-csr';
+import { AuthenticationGuard } from './Authentication/authentication-guard';
 
 export const routes: Routes = [
   {path: 'authentication/verification', component: Verification},
-  {path: 'mainpage', component: MainPageComponent},
-  {path: 'create-certificate', component: GenerateCertificateComponent},
-  {path: 'create-template', component: CreateTemplatePage},
-  {path:'CSR',component:GenerateCsrComponent},
-  {path: 'assign-ca', component: GiveUserCertPage},
-  {path: 'users/ca/new', component: CreateCaUserComponent},
+  {path: 'mainpage', component: MainPageComponent, canActivate: [AuthenticationGuard], data:{role: ['ADMIN', 'CA', 'USER']}},
+  {path: 'create-certificate', component: GenerateCertificateComponent, canActivate: [AuthenticationGuard], data:{role: ['ADMIN', 'CA']}},
+  {path: 'create-template', component: CreateTemplatePage, canActivate: [AuthenticationGuard], data:{role: ['ADMIN', 'CA']}},
+  {path:'CSR',component:GenerateCsrComponent, canActivate: [AuthenticationGuard], data:{role: ['USER']}},
+  {path: 'assign-ca', component: GiveUserCertPage, canActivate: [AuthenticationGuard], data:{role: ['ADMIN']}},
+  {path: 'users/ca/new', component: CreateCaUserComponent, canActivate: [AuthenticationGuard], data:{role: ['ADMIN']}},
   {path: 'users/new', component: RegistrationComponent},
   {path: '', component: LoginpageComponent}
 ];
