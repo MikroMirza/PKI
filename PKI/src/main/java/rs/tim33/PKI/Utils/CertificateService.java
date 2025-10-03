@@ -566,7 +566,25 @@ public class CertificateService {
 
 	    CertificateModel issuer = certRepo.findById(issuerCertId)
 	            .orElseThrow(() -> new IllegalArgumentException("Issuer not found"));
+	    LocalDateTime notBeforeDateTime = notBefore.atStartOfDay();
+	    LocalDateTime notAfterDateTime  = notAfter.atStartOfDay();
 
+	    LocalDateTime issuerNotBefore = issuer.getNotBefore();
+	    LocalDateTime issuerNotAfter  = issuer.getNotAfter();
+
+
+	    if (notBeforeDateTime.isBefore(issuerNotBefore)) {
+	        throw new IllegalArgumentException("Certificate 'Not Before' cannot be earlier than issuer's 'Not Before'");
+	    }
+	    if (notAfterDateTime.isAfter(issuerNotAfter)) {
+	        throw new IllegalArgumentException("Certificate 'Not After' cannot be later than issuer's 'Not After'");
+	    }
+	    if (notAfterDateTime.isBefore(notBeforeDateTime)) {
+	        throw new IllegalArgumentException("'Not After' date must be after 'Not Before'");
+	    }
+	    if (notBeforeDateTime.isBefore(LocalDateTime.now())) {
+	        throw new IllegalArgumentException("'Not Before' date cannot be in the past");
+	    }
 	    X509Certificate certificate = generateFromCSR(
 	            csr, publicKey, subject, issuer, notBefore, notAfter
 	    );

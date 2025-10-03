@@ -26,7 +26,9 @@
 
   <input type="file" (change)="onFileSelected($event)" accept=".pem" />
 </div>
-
+<div *ngIf="errorMessage" class="error-message">
+  {{ errorMessage }}
+</div>
 <div mat-dialog-actions>
   <button mat-button (click)="onCancel()">Cancel</button>
   <button mat-raised-button color="primary"

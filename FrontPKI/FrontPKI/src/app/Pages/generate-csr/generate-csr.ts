@@ -64,32 +64,33 @@ export class GenerateCsrComponent {
   }
 
   submit() {
-    if (this.csrForm.valid) {
-      const dto: GenerateCertificateRequestDTO = {
-        commonName: this.csrForm.value.commonName,
-        organization: this.csrForm.value.organization,
-        organizationalUnit: this.csrForm.value.organizationalUnit,
-        country: this.csrForm.value.country,
-        email: this.csrForm.value.email,
-        notBefore: this.csrForm.value.notBefore,
-        notAfter: this.csrForm.value.notAfter,
-        issuerCertId: this.csrForm.value.issuerCertId
-      };
+  if (this.csrForm.valid) {
+    const dto: GenerateCertificateRequestDTO = {
+      commonName: this.csrForm.value.commonName,
+      organization: this.csrForm.value.organization,
+      organizationalUnit: this.csrForm.value.organizationalUnit,
+      country: this.csrForm.value.country,
+      email: this.csrForm.value.email,
+      notBefore: this.csrForm.value.notBefore,
+      notAfter: this.csrForm.value.notAfter,
+      issuerCertId: this.csrForm.value.issuerCertId
+    };
 
-      this.certService.createCsrRequest(dto).subscribe({
-        next: (resp: any) => {
-          this.successMessage = 'CSR successfully created!';
-          this.errorMessage = '';
-          this.cd.detectChanges();
-          const certId = resp.certId || resp.id; 
-          this.certService.downloadCertificate(certId, this.csrForm.value.password);
-        },
-        error: (err) => {
-          this.errorMessage = err.error?.message || 'Error creating CSR';
-          this.successMessage = '';
-          this.cd.detectChanges();
-        }
-      });
-    }
+    this.certService.createCsrRequest(dto).subscribe({
+      next: (resp: any) => {
+        const certId = resp.certId || resp.id; 
+        this.certService.downloadCertificate(certId, this.csrForm.value.password);
+
+        window.alert('CSR created');
+      },
+      error: (err) => {
+        const message = err.error?.message || 'Error creating CSR';
+        window.alert(message);
+      }
+    });
+  } else {
+    window.alert('Fill out all required fields before submitting.');
   }
+}
+
 }

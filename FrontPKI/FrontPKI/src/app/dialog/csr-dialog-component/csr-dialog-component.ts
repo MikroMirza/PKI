@@ -35,6 +35,7 @@ export class CsrDialogComponent implements OnInit {
   notBefore!: Date;
   notAfter!: Date;
   csrFile?: File;
+  errorMessage: string | null = null;
 
   issuers: SimpleCertificateDTO[] = [];
   selectedIssuerId?: number;
@@ -61,25 +62,30 @@ export class CsrDialogComponent implements OnInit {
     this.csrFile = event.target.files[0];
   }
 
-  onGenerate() {
-    if (!this.csrFile || !this.notBefore || !this.notAfter || !this.selectedIssuerId) {
-      console.error('Missing required fields');
-      return;
-    }
 
-    this.certService.createCertificateFromCsr(
-      this.csrFile,
-      this.selectedIssuerId,
-      this.notBefore,
-      this.notAfter
-    ).subscribe({
-      next: (res) => {
-        console.log('Certificate generated from CSR', res);
-        this.dialogRef.close(res);
-      },
-      error: (err) => console.error('Error generating certificate', err)
-    });
+onGenerate() {
+  if (!this.csrFile || !this.notBefore || !this.notAfter || !this.selectedIssuerId) {
+    this.errorMessage = "Please fill in all required fields.";
+    return;
   }
+
+  this.certService.createCertificateFromCsr(
+    this.csrFile,
+    this.selectedIssuerId,
+    this.notBefore,
+    this.notAfter
+  ).subscribe({
+    next: (res) => {
+      console.log('Certificate generated from CSR', res);
+      this.dialogRef.close(res);
+    },
+    error: (err) => {
+      this.errorMessage = err.error?.message || 'Error generating certificate';
+      console.error('Error generating certificate', err);
+    }
+  });
+}
+
 
   onCancel() {
     this.dialogRef.close();
